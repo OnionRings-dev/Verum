@@ -1,0 +1,59 @@
+# SPDX-FileCopyrightText: 2026 Liam Michael Boland
+# SPDX-License-Identifier: LicenseRef-Verum-Proprietary
+#
+# Nota: questo file NON serve a dimostrare la paternita' del progetto.
+# Dice solo a Git quali file non tracciare. Qui ha due compiti:
+#   1. tenere fuori dal repository cio' che si rigenera (dipendenze, build);
+#   2. impedire di pubblicare per sbaglio chiavi private e segreti, che sono
+#      proprio cio' con cui dimostri che il codice e' tuo (vedi PROPRIETA.md).
+
+# --- dipendenze e build (si rigenerano con npm install / node build.mjs)
+node_modules/
+dist/
+# se pubblichi il sito su GitHub Pages dalla cartella dist, cancella la riga sopra
+
+# --- chiavi e segreti: MAI nel repository
+*.pem
+*.key
+*.p12
+*.pfx
+*.gpg
+id_ed25519
+id_ed25519*
+id_rsa
+id_rsa*
+!*.pub
+.env
+.env.*
+
+# --- software di terzi: MAI nel repository
+# I programmi LPL (jar, exe, JRE, file di esercizio) sono proprieta' dei loro
+# autori. Pubblicarli violerebbe la loro licenza e indebolirebbe proprio la tua
+# posizione: non puoi rivendicare diritti su un repo che ne viola altri.
+LPL Software/
+*.jar
+*.exe
+*.dll
+*.prf
+*.sen
+*.wld
+New_Compressed*.zip
+*sentences*.zip
+# il PDF delle regole si carica nell'app dal proprio computer, non va nel repo
+FitchRules*.pdf
+
+# --- archivi usati per le marche temporali (tieni una copia fuori dal repo)
+*.tar
+*.tar.gz
+
+# --- sistema operativo ed editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# --- log
+npm-debug.log*
+*.log
