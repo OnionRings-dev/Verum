@@ -8,7 +8,7 @@
  * (versione, piattaforma, "SntP", numero di enunciati), poi gli enunciati
  * separati da form feed. Il testo dopo ';' e' un commento. In coda c'e' una
  * somma di controllo "s=NNNN;". La notazione ASCII (~ & | $ % @ / # ^ [ ])
- * e' quella che il parser di Verum accetta gia'.
+ * e' quella che il parser di Verum accetta già.
  *
  * Gli enunciati vuoti restano: servono a mantenere la numerazione usata dal
  * libro negli esercizi. Gli enunciati mal formati restano come testo: alcuni

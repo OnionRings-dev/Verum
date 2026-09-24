@@ -43,7 +43,8 @@ t('tema ricordato', dom.window.localStorage.getItem('verum:theme') === '"minimal
 
 // all'ingresso ogni strumento e' vuoto
 t('tavole: nessun enunciato precaricato', [...d.querySelectorAll('#tt-rows .finput')].every(i => i.value === ''));
-t('tavole: nessuna tavola disegnata', d.querySelector('#tt-out').children.length === 0);
+t('tavole: nessuna tavola finche\u2019 non si scrive', !d.querySelector('#tt-out table.tt'));
+t('tavole: stato vuoto spiegato', !!d.querySelector('#tt-out .blank'));
 t('mondi: tavolo vuoto', d.querySelectorAll('#wd-board .blk').length === 0);
 t('mondi: nessun enunciato precaricato', [...d.querySelectorAll('#wd-rows .finput')].every(i => i.value === ''));
 t('derivazioni: nessun obiettivo', d.querySelector('#pf-goal').value === '');
@@ -123,12 +124,20 @@ t('sentences: menu chiuso dopo la scelta', !d.querySelector('#wd-libpop .libpop'
 t('sentences: raccolta ricordata', JSON.parse(W.localStorage.getItem('verum:sentence-library'))?.length === 1);
 
 // tastierino dei blocchi
-t('tastierino: 18 predicati', d.querySelectorAll('#wd-keypad .kp-pred').length === 18);
+const tabLabels = [...d.querySelectorAll('#wd-keypad .kp-tab')].map(b => b.textContent);
+t('tastierino: tre schede di predicati', tabLabels.join() === 'Forma,Dimensione,Posizione');
+t('tastierino: la prima scheda mostra le forme', [...d.querySelectorAll('#wd-keypad .kp-pred')].map(b => b.textContent).join() === 'Tet,Cube,Dodec,SameShape');
+const openTab = name => [...d.querySelectorAll('#wd-keypad .kp-tab')].find(b => b.textContent === name).click();
+let seen = new Set();
+['Forma','Dimensione','Posizione'].forEach(name => { openTab(name); d.querySelectorAll('#wd-keypad .kp-pred').forEach(b => seen.add(b.textContent)); });
+t('tastierino: 18 predicati in tutto', seen.size === 18);
+t('tastierino: la scheda scelta viene ricordata', JSON.parse(W.localStorage.getItem('verum:keypad-tab')) === 'posizione');
 t('tastierino: nomi e variabili', ['a','f','x','w','\u2200','\u22a5'].every(k => [...d.querySelectorAll('#wd-keypad .kp-key')].some(b => b.textContent === k)));
 d.querySelector('#wd-add').click();
 const fresh = [...d.querySelectorAll('#wd-rows .finput')].pop();
 fresh.focus();
 const press = label => [...d.querySelectorAll('#wd-keypad button')].find(b => b.textContent === label).click();
+openTab('Posizione');
 ['\u2200', 'x', 'LeftOf', 'x', ',', 'a'].forEach(press);
 t('tastierino: scrive nel campo', fresh.value === '\u2200x LeftOf(x, a)');
 t('tastierino: il risultato e\u2019 una formula', !!fresh.value && d.querySelectorAll('#wd-rows .finput.bad').length === 0);
@@ -183,6 +192,70 @@ t('rif: evidenziazione solo della riga attiva', d.querySelectorAll('#pf-proof .c
 d.activeElement.blur();
 t('rif: avviso nascosto fuori dalla citazione', d.querySelector('#pf-citehint').hidden === true);
 t('rif: la riga 1 non puo\u2019 citare se stessa', !rowOf(1).classList.contains('citable'));
+
+// rientra e sporgi dall'interfaccia
+d.querySelector('#pf-reset').click();
+t('derivazioni: stato vuoto spiegato', d.querySelector('#pf-empty').hidden === false);
+const lines = () => [...d.querySelectorAll('#pf-proof .pf')];
+const structure = () => [...d.querySelectorAll('#pf-proof .pline')].map(l => l.closest('.sub') ? 'dentro' : 'fuori').join(',');
+lines()[0].value = 'P'; lines()[0].dispatchEvent(new W.Event('input', { bubbles: true }));
+lines()[1].value = 'Q'; lines()[1].dispatchEvent(new W.Event('input', { bubbles: true }));
+t('derivazioni: stato vuoto sparisce quando si scrive', (d.querySelector('#pf-check').click(), d.querySelector('#pf-empty').hidden === true));
+const second = lines()[1];
+second.focus();
+second.dispatchEvent(new W.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+t('derivazioni: Tab crea la sottodimostrazione', structure() === 'fuori,dentro');
+t('derivazioni: la riga rientrata diventa assunzione', d.querySelector('#pf-proof .sub .prule').textContent === 'Assunz');
+lines()[1].focus();
+lines()[1].dispatchEvent(new W.KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }));
+t('derivazioni: Maiusc+Tab la fa uscire', structure() === 'fuori,fuori');
+const indentButton = [...d.querySelectorAll('#pf-proof .pact')].filter(b => b.title.startsWith('Rientra'));
+t('derivazioni: la premessa non puo\u2019 rientrare', indentButton[0].disabled === true);
+indentButton.find(b => !b.disabled).click();
+t('derivazioni: anche il pulsante rientra', structure() === 'fuori,dentro');
+const premiseIndent = [...d.querySelectorAll('#pf-proof .pline')]
+  .map(l => l.querySelector('.pact'))
+  .filter(Boolean);
+t('derivazioni: comandi presenti su ogni riga', premiseIndent.length >= 2);
+
+// menu delle regole al posto della tendina
+t('derivazioni: niente piu\u2019 menu a tendina', d.querySelectorAll('#pf-proof select').length === 0);
+const ruleLabel = d.querySelector('#pf-proof .prule');
+ruleLabel.click();
+t('regole: il menu si apre', !!d.querySelector('#pf-proof .rule-menu:not([hidden])'));
+t('regole: raggruppate', [...d.querySelectorAll('#pf-proof .rule-group')].length >= 2);
+const ruleSearch = d.querySelector('#pf-proof .rule-search');
+ruleSearch.value = 'elim';
+ruleSearch.dispatchEvent(new W.Event('input', { bubbles: true }));
+const filtered = [...d.querySelectorAll('#pf-proof .rule-opt')].map(b => b.textContent);
+t('regole: la ricerca filtra', filtered.length > 0 && filtered.every(n => n.toLowerCase().includes('elim')));
+[...d.querySelectorAll('#pf-proof .rule-opt')].find(b => b.textContent === '\u2227 Elim').click();
+t('regole: la scelta si applica', d.querySelector('#pf-proof .prule').textContent === '\u2227 Elim');
+
+// tavola viva
+W.location.hash = '#tt';
+d.querySelectorAll('.screen').forEach(sec => sec.classList.toggle('on', sec.id === 's-tt'));
+d.querySelector('#tt-clear').click();
+const ttLive = d.querySelector('#tt-rows .finput');
+ttLive.value = 'P \u2228 \u00acP';
+ttLive.dispatchEvent(new W.Event('input', { bubbles: true }));
+await new Promise(r => setTimeout(r, 500));
+t('tavole: la tavola si costruisce da sola', d.querySelectorAll('#tt-out table.tt tbody tr').length === 2);
+t('tavole: e riconosce la tautologia', d.querySelector('#tt-out .sum')?.textContent.includes('tautologia'));
+
+// mondo vivo
+W.location.hash = '#wd';
+d.querySelectorAll('.screen').forEach(sec => sec.classList.toggle('on', sec.id === 's-wd'));
+d.querySelector('#wd-example').click();
+await new Promise(r => setTimeout(r, 200));
+const wdLive = d.querySelector('#wd-rows .finput');
+wdLive.value = '\u2203x Dodec(x)';
+wdLive.dispatchEvent(new W.Event('input', { bubbles: true }));
+await new Promise(r => setTimeout(r, 500));
+t('mondi: verdetto senza premere nulla', d.querySelector('#wd-v0 .chip')?.textContent === 'vero');
+[...d.querySelectorAll('#wd-board .blk')].forEach(b => { b.click(); const del = [...d.querySelectorAll('#wd-insp .btn')].find(x => x.textContent.includes('Elimina')); del?.click(); });
+await new Promise(r => setTimeout(r, 100));
+t('mondi: il verdetto segue le modifiche del tavolo', d.querySelector('#wd-v0 .chip')?.textContent === 'indefinito');
 
 if (runtimeErrors.length) console.log(runtimeErrors.join('\n'));
 console.log(`\nsmoke test: ${pass} passati, ${fail} falliti`);

@@ -33,7 +33,7 @@ export class World {
     this.blocks = [...blocks];
     const seen = new Set();
     for (const b of this.blocks) for (const n of b.names) {
-      if (seen.has(n)) throw new WorldInvariantViolation(`la costante "${n}" e' assegnata a piu' di un blocco`);
+      if (seen.has(n)) throw new WorldInvariantViolation(`la costante "${n}" è assegnata a più di un blocco`);
       seen.add(n);
     }
     for (let i = 0; i < this.blocks.length; i++)
@@ -77,7 +77,7 @@ export class World {
   referentOf(name, assignment) {
     if (assignment && Object.prototype.hasOwnProperty.call(assignment, name)) return assignment[name];
     const block = this.blocks.find(b => b.names.includes(name));
-    if (!block) throw new UndefinedReference(`la costante "${name}" non e' assegnata a nessun blocco`);
+    if (!block) throw new UndefinedReference(`la costante "${name}" non è assegnata a nessun blocco`);
     return block;
   }
 

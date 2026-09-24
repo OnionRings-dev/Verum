@@ -5,7 +5,7 @@
  * Tiene lo stato di modifica come dati grezzi e costruisce un World del
  * dominio solo al momento della valutazione: l'aggregato resta sempre valido.
  */
-import { $, $$, el, clear } from './dom.js';
+import { $, $$, el, clear, debounce } from './dom.js';
 import { blockSvg, ensureShapeDefs } from './BlockShapes.js';
 import { World, Block, Shape, Size, CONSTANTS, WorldInvariantViolation } from '../../domain/world/World.js';
 
@@ -30,17 +30,17 @@ export class WorldView {
     this.sentences = [''];
     this.notes = [''];
     this.collection = '';
+    this.refresh = debounce(() => this.evaluate(), 350);
   }
 
   async start() {
     this.restore(await this.repository.load('world'));
 
-    $('#wd-add').addEventListener('click', () => { this.sentences.push(''); this.notes.push(''); this.renderSentences(); });
+    $('#wd-add').addEventListener('click', () => { this.sentences.push(''); this.notes.push(''); this.renderSentences(); this.focusLastSentence(); });
     $('#wd-clearsent').addEventListener('click', () => { this.setSentences([]); this.persist(); });
     $('#wd-clearworld').addEventListener('click', () => {
-      this.blocks = []; this.selected = null; this.renderBoard(); this.renderInspector(); this.persist();
+      this.blocks = []; this.selected = null; this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
     });
-    $('#wd-eval').addEventListener('click', () => this.evaluate());
     $('#wd-example').addEventListener('click', () => {
       this.loadExampleWorld();
       this.setSentences([
@@ -51,6 +51,7 @@ export class WorldView {
     });
 
     this.renderBoard(); this.renderInspector(); this.renderSentences();
+    this.evaluate();
   }
 
   /**
@@ -152,7 +153,7 @@ export class WorldView {
           if (blocked) { this.refuse(blocked.reason); return; }
           const created = { id: this.nextId++, shape: Shape.CUBE, size: Size.MEDIUM, x, y, names: [] };
           this.blocks.push(created); this.selected = created.id; this.notice = '';
-          this.renderBoard(); this.renderInspector(); this.persist();
+          this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
         });
       }
 
@@ -175,7 +176,7 @@ export class WorldView {
         const conflict = this.conflictFor({ x, y, size: moved.size }, moved.id);
         if (conflict) { this.refuse(conflict.reason); this.renderBoard(); return; }
         moved.x = x; moved.y = y; this.selected = id; this.notice = '';
-        this.renderBoard(); this.renderInspector(); this.persist();
+        this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
       });
       board.appendChild(cell);
     }
@@ -204,7 +205,7 @@ export class WorldView {
         button.addEventListener('click', () => {
           if (reason) return;
           pick(value); this.notice = '';
-          this.renderBoard(); this.renderInspector(); this.persist();
+          this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
         });
         row.appendChild(button);
       });
@@ -230,7 +231,7 @@ export class WorldView {
           this.blocks.forEach(b => { b.names = b.names.filter(n => n !== name); });
           block.names = [...block.names, name].sort();
         }
-        this.renderBoard(); this.renderInspector(); this.persist();
+        this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
       });
       tags.appendChild(tag);
     });
@@ -242,7 +243,7 @@ export class WorldView {
     remove.addEventListener('click', () => {
       this.blocks = this.blocks.filter(b => b.id !== block.id);
       this.selected = null;
-      this.renderBoard(); this.renderInspector(); this.persist();
+      this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
     });
     host.appendChild(remove);
   }
@@ -251,11 +252,18 @@ export class WorldView {
    * Sostituisce l'elenco degli enunciati (es. da una raccolta caricata).
    * @param {{text:string, note:string}[]} items
    */
+  addSentence() {
+    this.sentences.push(''); this.notes.push('');
+    this.renderSentences(); this.focusLastSentence();
+  }
+  focusLastSentence() { const all = $$('#wd-rows .finput'); all[all.length - 1]?.focus(); }
+
   setSentences(items, collection = '') {
     this.sentences = items.length ? items.map(s => s.text) : [''];
     this.notes     = items.length ? items.map(s => s.note || '') : [''];
     this.collection = collection;
     this.renderSentences();
+    this.evaluate();
   }
 
   loadCollection({ title, sentences }) {
@@ -265,7 +273,8 @@ export class WorldView {
 
   renderSentences() {
     const title = $('#wd-collection');
-    if (title) title.textContent = this.collection ? ` · ${this.collection}` : '';
+    if (title) title.textContent = this.collection ? ` \u00b7 ${this.collection}` : '';
+
     const host = clear($('#wd-rows'));
     this.sentences.forEach((value, i) => {
       const row = el('div', 'frow');
@@ -273,27 +282,40 @@ export class WorldView {
 
       const input = el('input', 'finput formula');
       input.value = value;
-      input.placeholder = 'es. ∀x (Cube(x) → Small(x))';
-      input.addEventListener('input', () => { this.sentences[i] = input.value; input.classList.remove('bad'); });
+      input.placeholder = 'es. \u2200x (Cube(x) \u2192 Small(x))';
+      input.addEventListener('input', () => {
+        this.sentences[i] = input.value;
+        input.classList.remove('bad');
+        this.refresh();                     // gli esiti si aggiornano da soli
+      });
       input.addEventListener('change', () => this.persist());
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); this.evaluate(); } });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); this.refresh.now(); this.addSentence(); }
+      });
 
-      const verdict = el('span'); verdict.id = `wd-v${i}`; verdict.style.minWidth = '72px'; verdict.style.flex = 'none';
-      const remove = el('button', 'xbtn', '×');
+      const verdict = el('span'); verdict.id = `wd-v${i}`; verdict.className = 'wd-verdict';
+      const remove = el('button', 'xbtn', '\u00d7');
+      remove.title = 'Elimina';
       remove.addEventListener('click', () => {
         this.sentences.splice(i, 1);
         this.notes.splice(i, 1);
         if (!this.sentences.length) { this.sentences = ['']; this.notes = ['']; }
-        this.renderSentences(); this.persist();
+        this.renderSentences(); this.persist(); this.evaluate();
       });
 
       row.append(input, verdict, remove);
       host.appendChild(row);
-      if (this.notes[i]) host.appendChild(el('p', 'snote', this.notes[i]));
 
       const error = el('p', 'err'); error.id = `wd-e${i}`; error.style.display = 'none';
       host.appendChild(error);
+      if (this.notes[i]) host.appendChild(el('p', 'snote', this.notes[i]));
     });
+
+    if (this.sentences.every(text => !text.trim())) {
+      host.appendChild(el('p', 'hint blank-inline', this.blocks.length
+        ? 'Scrivi un enunciato: il verdetto compare qui accanto e si aggiorna quando muovi i blocchi.'
+        : 'Metti qualche blocco sul tavolo, poi scrivi un enunciato: il verdetto si aggiorna da solo.'));
+    }
   }
 
   evaluate() {

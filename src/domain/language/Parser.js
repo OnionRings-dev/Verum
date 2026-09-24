@@ -47,7 +47,7 @@ export function parse(source) {
       const quantifier = next().kind;
       const variable = expect('identifier').value;
       if (!VARIABLE.test(variable))
-        throw new SyntaxError_(`"${variable}" non e' una variabile: usa u, v, w, x, y, z`);
+        throw new SyntaxError_(`"${variable}" non è una variabile: usa u, v, w, x, y, z`);
       return quantifier === 'all' ? All(variable, unary()) : Ex(variable, unary());
     }
     return primary();

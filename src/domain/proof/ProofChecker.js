@@ -11,7 +11,7 @@ import { Proof, Justification } from './Proof.js';
 import { RULES } from './rules.js';
 import { tryParse } from '../language/Parser.js';
 import { citationTokens } from './citations.js';
-import { equals } from '../language/Formula.js';
+import { equals, freeTerms } from '../language/Formula.js';
 
 export const Status = Object.freeze({
   OK: 'ok', INVALID: 'invalid', MALFORMED: 'malformed', UNJUSTIFIED: 'unjustified', EMPTY: 'empty'
@@ -102,10 +102,12 @@ export class ProofChecker {
         if (found.last >= entry.number) return { error: `la sottodimostrazione ${token} non e\u2019 ancora chiusa` };
 
         const innerLines = found.subproof.items.filter(i => i.kind === 'line');
+        const constant = (found.subproof.constant || '').trim();
         subproofs.push({
           assumption: innerLines.length ? formulas.get(innerLines[0].id) : null,
           conclusion: this.lastFormulaOf(found.subproof, formulas),
-          constant: (found.subproof.constant || '').trim(),
+          constant,
+          isFresh: constant ? this.isFreshOutside(constant, found.subproof, index, formulas, proof) : false,
           label: token
         });
         continue;
@@ -123,6 +125,23 @@ export class ProofChecker {
       lines.push({ formula, number });
     }
     return { lines, subproofs };
+  }
+
+  /**
+   * La condizione che rende sane ∀ Intro ed ∃ Elim: la costante introdotta non
+   * deve comparire da nessuna parte fuori dalla sottodimostrazione che la
+   * introduce, obiettivo compreso. Senza questo controllo da Cube(a) si
+   * dimostrerebbe ∀x Cube(x).
+   */
+  isFreshOutside(constant, subproof, index, formulas, proof) {
+    for (const entry of index.lines) {
+      if (entry.chain.includes(subproof)) continue;       // dentro: non conta
+      const formula = formulas.get(entry.line.id);
+      if (formula && freeTerms(formula).has(constant)) return false;
+    }
+    const goal = tryParse(proof.goal);
+    if (goal.ok && freeTerms(goal.formula).has(constant)) return false;
+    return true;
   }
 
   lastFormulaOf(container, formulas) {

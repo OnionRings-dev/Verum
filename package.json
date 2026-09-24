@@ -1,6 +1,6 @@
 {
   "name": "verum",
-  "version": "0.7.0",
+  "version": "0.9.0",
   "description": "Strumenti web per la logica del primo ordine: tavole di verita', mondi di blocchi, derivazioni in stile Fitch.",
   "type": "module",
   "private": true,
@@ -9,7 +9,9 @@
   "scripts": {
     "start": "python3 -m http.server 8000",
     "test": "node test/run.mjs",
+    "test:all": "node test/tutto.mjs",
     "test:smoke": "node build.mjs && node test/smoke.test.mjs",
+    "test:scenari": "node build.mjs && node test/scenari.test.mjs",
     "test:stress": "node build.mjs && node test/stress.test.mjs",
     "build": "node build.mjs"
   },

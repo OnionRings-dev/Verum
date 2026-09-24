@@ -7,7 +7,7 @@
  * segnaposto [data-themes] (uno per schermata), tiene i bottoni sincronizzati
  * e salva la scelta attraverso la porta WorkspaceRepository.
  *
- * Usa l'attributo data-look, non data-theme: data-theme puo' essere impostato
+ * Usa l'attributo data-look, non data-theme: data-theme può essere impostato
  * dall'ambiente che ospita la pagina (sistema o visualizzatore) e non deve
  * essere sovrascritto. Finche' l'utente non sceglie, Verum segue quello.
  */

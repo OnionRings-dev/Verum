@@ -51,7 +51,11 @@ async function bootstrap() {
   await startSafely('Tavole', () => new TruthTableView({ buildTruthTable, repository }).start());
   const worldView = new WorldView({ evaluateInWorld, repository });
   await startSafely('Mondi', () => worldView.start());
-  new BlocksKeypad({ host: document.getElementById('wd-keypad'), fields: document.getElementById('wd-rows') }).start();
+  await startSafely('tastierino', () => new BlocksKeypad({
+    host: document.getElementById('wd-keypad'),
+    fields: document.getElementById('wd-rows'),
+    repository
+  }).start());
   await startSafely('raccolte di enunciati', () => new SentenceLibraryMenu({
     button: document.getElementById('wd-library'),
     host: document.getElementById('wd-libpop'),

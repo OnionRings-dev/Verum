@@ -57,7 +57,7 @@ function clickableIn(screen) {
 }
 function fieldsIn(screen) {
   const root = d.querySelector('#s-' + screen);
-  return [...root.querySelectorAll('input.finput, input.pf, input.prefs, select.prule')];
+  return [...root.querySelectorAll('input.finput, input.pf, input.prefs')];
 }
 
 const safely = (what, action) => {
@@ -69,7 +69,8 @@ t('avvio senza errori', errors.length === 0);
 
 /* ---------- 2. pestaggio a caso ---------- */
 let clicks = 0, edits = 0;
-for (let round = 0; round < 600; round++) {
+const ROUNDS = Number(process.env.VERUM_ROUNDS ?? 1200);
+for (let round = 0; round < ROUNDS; round++) {
   const screen = pick(screens);
   W.location.hash = '#' + screen;
   d.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === 's-' + screen));
@@ -96,6 +97,14 @@ for (let round = 0; round < 600; round++) {
       });
       edits++;
     }
+  } else if (rnd() < 0.5) {
+    const labels = [...d.querySelectorAll('#pf-proof .prule')];
+    if (labels.length) safely('regola', () => {
+      const label = pick(labels);
+      label.click();
+      const options = [...d.querySelectorAll('#pf-proof .rule-opt')];
+      if (options.length) pick(options).click();
+    });
   } else {
     const cells = [...d.querySelectorAll('#wd-board .cell')];
     if (cells.length) safely('tavolo', () => pick(cells).click());
@@ -111,7 +120,7 @@ safely('svuota tavole', () => d.querySelector('#tt-clear').click());
 const ttField = d.querySelector('#tt-rows .finput');
 ttField.value = 'P → Q';
 ttField.dispatchEvent(new W.Event('input', { bubbles: true }));
-safely('costruisci tavola', () => d.querySelector('#tt-build').click());
+await new Promise(r => setTimeout(r, 500));   // la tavola si costruisce da sola
 t('Tavole funziona ancora dopo il pestaggio', d.querySelectorAll('#tt-out table.tt tbody tr').length === 4);
 
 W.location.hash = '#wd';
@@ -126,6 +135,36 @@ safely('nuova prova', () => d.querySelector('#pf-reset').click());
 safely('esempio prova', () => d.querySelector('#pf-example').click());
 t('Derivazioni verifica ancora la prova di esempio',
   d.querySelector('#pf-verdict')?.textContent.includes('completa'));
+
+/* ---------- 3a bis. raffica su rientra e sporgi ---------- */
+W.location.hash = '#pf';
+d.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === 's-pf'));
+safely('nuova prova', () => d.querySelector('#pf-reset').click());
+for (let i = 0; i < 10; i++) safely('riga', () => d.querySelector('#pf-addline').click());
+[...d.querySelectorAll('#pf-proof .pf')].forEach((field, i) => safely('testo', () => {
+  field.value = pick(GIBBERISH);
+  field.dispatchEvent(new W.Event('input', { bubbles: true }));
+}));
+for (let i = 0; i < 300; i++) {
+  const buttons = [...d.querySelectorAll('#pf-proof .pact')].filter(b => !b.disabled && b.title !== 'Elimina la riga');
+  if (!buttons.length) break;
+  safely('struttura', () => pick(buttons).click());
+}
+t('300 rientri e uscite a caso senza errori', errors.length === 0);
+t('la prova e\u2019 ancora coerente', d.querySelectorAll('#pf-proof .pline').length > 0);
+safely('verifica dopo la raffica', () => d.querySelector('#pf-check').click());
+t('e si verifica ancora', d.querySelectorAll('#pf-proof .pstat').length === d.querySelectorAll('#pf-proof .pline').length);
+
+/* ---------- 3a ter. menu aperti mentre si pesta ---------- */
+for (let i = 0; i < 60; i++) safely('menu regole', () => {
+  const labels = [...d.querySelectorAll('#pf-proof .prule')];
+  if (!labels.length) return;
+  pick(labels).click();
+  const options = [...d.querySelectorAll('#pf-proof .rule-opt')];
+  if (options.length && rnd() < 0.7) pick(options).click();
+  else d.querySelector('#pf-proof .rule-search')?.dispatchEvent(new W.FocusEvent('blur'));
+});
+t('60 aperture del menu delle regole reggono', errors.length === 0);
 
 /* ---------- 3b. carico: una prova lunga e poi svuotata ---------- */
 safely('nuova prova', () => d.querySelector('#pf-reset').click());
@@ -149,8 +188,13 @@ safely('svuota mondo', () => d.querySelector('#wd-clearworld').click());
 [...d.querySelectorAll('#wd-board .cell')].forEach(cell => safely('riempimento', () => cell.click()));
 const placed = d.querySelectorAll('#wd-board .blk').length;
 t('il tavolo si riempie senza errori', placed > 0 && placed <= 64);
-for (let i = 0; i < 40; i++) safely('valutazione ripetuta', () => d.querySelector('#wd-eval').click());
-t('40 valutazioni di fila reggono', true);
+for (let i = 0; i < 40; i++) safely('valutazione ripetuta', () => {
+  const field = d.querySelector('#wd-rows .finput');
+  field.value = i % 2 ? '∀x Cube(x)' : '∃x Tet(x)';
+  field.dispatchEvent(new W.Event('input', { bubbles: true }));
+});
+await new Promise(r => setTimeout(r, 500));
+t('40 modifiche di fila reggono', d.querySelectorAll('#wd-rows .chip').length > 0);
 safely('svuota mondo', () => d.querySelector('#wd-clearworld').click());
 t('il tavolo si svuota', d.querySelectorAll('#wd-board .blk').length === 0);
 

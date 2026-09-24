@@ -26,3 +26,11 @@ export function insertAround(field, before, after = '') {
   field.selectionStart = field.selectionEnd = caret;
   field.dispatchEvent(new Event('input', { bubbles: true }));
 }
+
+/** Ritarda l'esecuzione finche' l'utente smette di digitare. */
+export function debounce(action, delay = 300) {
+  let timer = null;
+  const run = (...args) => { clearTimeout(timer); timer = setTimeout(() => action(...args), delay); };
+  run.now = (...args) => { clearTimeout(timer); action(...args); };
+  return run;
+}

@@ -7,7 +7,7 @@
  * loro arieta' vengono dalla segnatura del dominio: se il linguaggio cambia,
  * il tastierino cambia da solo.
  */
-import { el, insertAround } from './dom.js';
+import { el, clear, insertAround } from './dom.js';
 import { SIGNATURE, CONSTANTS } from '../../domain/world/World.js';
 
 const GROUPS = [
@@ -17,26 +17,31 @@ const GROUPS = [
   { label: 'Variabili',   keys: ['x', 'y', 'z', 'u', 'v', 'w'] }
 ];
 
-/* tre colonne: forma, dimensione, posizione */
-const PREDICATE_ROWS = [
-  ['Tet', 'Small', 'LeftOf'],
-  ['Cube', 'Medium', 'RightOf'],
-  ['Dodec', 'Large', 'FrontOf'],
-  ['SameShape', 'SameSize', 'BackOf'],
-  ['SameRow', 'SameCol', 'Adjoins'],
-  ['Larger', 'Smaller', 'Between']
+/* i predicati a schede: diciotto pulsanti tutti in vista sono rumore */
+const TABS = [
+  { id: 'forma',      label: 'Forma',      rules: ['Tet', 'Cube', 'Dodec', 'SameShape'] },
+  { id: 'dimensione', label: 'Dimensione', rules: ['Small', 'Medium', 'Large', 'SameSize', 'Larger', 'Smaller'] },
+  { id: 'posizione',  label: 'Posizione',  rules: ['LeftOf', 'RightOf', 'FrontOf', 'BackOf', 'SameRow', 'SameCol', 'Adjoins', 'Between'] }
 ];
 
 const ARGS = ['x', 'y', 'z'];
 
 export class BlocksKeypad {
-  constructor({ host, fields }) {
-    this.host = host;       // dove disegnare il tastierino
-    this.fields = fields;   // contenitore dei campi degli enunciati
+  constructor({ host, fields, repository }) {
+    this.host = host;           // dove disegnare il tastierino
+    this.fields = fields;       // contenitore dei campi degli enunciati
+    this.repository = repository;
     this.last = null;
+    this.tab = TABS[0].id;
   }
 
-  start() {
+  async start() {
+    const saved = await this.repository?.load('keypad-tab');
+    if (TABS.some(t => t.id === saved)) this.tab = saved;
+    this.draw();
+  }
+
+  draw() {
     this.fields.addEventListener('focusin', e => { if (e.target.matches('.finput')) this.last = e.target; });
     this.host.setAttribute('role', 'toolbar');
     this.host.setAttribute('aria-label', 'Tastierino del linguaggio dei blocchi');
@@ -49,15 +54,35 @@ export class BlocksKeypad {
       groups.appendChild(group);
     });
 
+    const tabs = el('div', 'kp-tabs');
+    tabs.setAttribute('role', 'tablist');
     const predicates = el('div', 'kp-preds');
-    PREDICATE_ROWS.flat().forEach(name => {
-      const arity = SIGNATURE[name];
-      const button = this.key(name, 'kp-pred', () => this.type(`${name}(`, ')'));
-      button.title = `${name}(${ARGS.slice(0, arity).join(', ')})`;
-      predicates.appendChild(button);
+
+    const fill = () => {
+      clear(predicates);
+      const active = TABS.find(t => t.id === this.tab) ?? TABS[0];
+      active.rules.forEach(name => {
+        const arity = SIGNATURE[name];
+        const button = this.key(name, 'kp-pred', () => this.type(`${name}(`, ')'));
+        button.title = `${name}(${ARGS.slice(0, arity).join(', ')})`;
+        predicates.appendChild(button);
+      });
+      [...tabs.children].forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === this.tab)));
+    };
+
+    TABS.forEach(tab => {
+      const button = this.key(tab.label, 'kp-tab', () => {
+        this.tab = tab.id;
+        this.repository?.save('keypad-tab', tab.id);
+        fill();
+      });
+      button.dataset.tab = tab.id;
+      button.setAttribute('role', 'tab');
+      tabs.appendChild(button);
     });
 
-    this.host.append(groups, predicates);
+    fill();
+    this.host.append(groups, tabs, predicates);
   }
 
   key(text, className, action) {

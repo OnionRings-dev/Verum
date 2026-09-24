@@ -9,11 +9,15 @@ Come dimostrare la paternità del progetto: vedi `PROPRIETA.md`.
 
 Tre strumenti web per un corso di logica del primo ordine:
 
-- **Tavole** — tavole di verita' complete, validita' dell'argomento, soddisfacibilita' congiunta.
-- **Mondi** — editor di mondi di blocchi e valutazione di enunciati quantificati.
+- **Tavole** — tavole di verita' complete, validita' dell'argomento, soddisfacibilita' congiunta,
+  ricostruite mentre si scrive.
+- **Mondi** — editor di mondi di blocchi e valutazione di enunciati quantificati, aggiornata a
+  ogni modifica del tavolo.
   "Carica sentences" importa i file `.sen` del corso (singoli, a gruppi o in uno
   zip) e li offre in un menu; anche questi restano nel browser di chi li carica.
 - **Derivazioni** — editor di prove in stile Fitch con verifica regola per regola.
+  Le righe si rientrano e si fanno uscire con Tab e Maiusc+Tab, i riferimenti si
+  compongono cliccando le righe citate.
   Il pannello a destra mostra il PDF delle regole del corso, che ogni utente
   carica dal proprio computer: il PDF resta nel suo browser e non fa parte del
   repository, perché è materiale di terzi.
@@ -32,20 +36,22 @@ I moduli ES non si caricano da `file://`. Serve un server statico:
 
 ## Test
 
-    node test/run.mjs          # nucleo + conformita' architetturale
-    npm run test:smoke         # avvia il bundle in un DOM simulato (richiede npm install)
+Un comando solo esegue tutto, bundle compreso:
 
-Quattro suite, nessuna delle quali avvia un browser vero:
+    node test/tutto.mjs
+
+Le singole suite, nessuna delle quali avvia un browser vero:
 
 | comando | cosa verifica |
 |---|---|
-| `node test/run.mjs` | comportamento del nucleo (parser, semantica, regole), importazione dei file del corso, robustezza su input storti, e conformita' architetturale |
+| `node test/run.mjs` | nucleo (parser, semantica, regole), importazione dei file del corso, **esempi di riferimento** con esito noto, robustezza su input storti, conformita' architetturale |
 | `node test/smoke.test.mjs` | il bundle consegnato si avvia e le funzioni principali rispondono |
-| `node test/stress.test.mjs` | pestaggio casuale dell'interfaccia, prove lunghe, stato salvato corrotto |
+| `node test/scenari.test.mjs` | percorsi d'uso completi: si costruiscono tavole, mondi e prove usando solo clic e tastiera, e si controlla il risultato |
+| `node test/stress.test.mjs` | pestaggio casuale dell'interfaccia, raffiche su rientra/sporgi e sui menu, prove lunghe, stato salvato corrotto |
 
-Lo stress test e' deterministico: `VERUM_SEED=101 node test/stress.test.mjs`
-ripete esattamente la stessa sequenza di azioni.
-Gli ultimi due richiedono `node build.mjs` prima.
+Stress e scenari sono deterministici: `VERUM_SEED=101 node test/stress.test.mjs`
+ripete esattamente la stessa sequenza di azioni, e `VERUM_ROUNDS` ne cambia la
+durata. Smoke, scenari e stress richiedono `node build.mjs` prima.
 
 ## Build
 

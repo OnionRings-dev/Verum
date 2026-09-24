@@ -8,7 +8,8 @@
 import { $, el, clear } from './dom.js';
 import { Proof, Line, Subproof, Justification, resetIds } from '../../domain/proof/Proof.js';
 import { citationTokens, toggleCitation } from '../../domain/proof/citations.js';
-import { RULE_NAMES } from '../../domain/proof/rules.js';
+import { indentLine, outdentLine, canIndent, canOutdent } from '../../domain/proof/edit.js';
+import { rulePicker } from './RulePicker.js';
 import { namesInUse, freshConstant } from '../../domain/proof/constants.js';
 import { constantPicker } from './ConstantPicker.js';
 
@@ -22,6 +23,10 @@ export class ProofView {
     this.repository = repository;
     this.proof = null;
     this.focusKey = null;
+    this.notice = '';
+    this.openRule = null;
+    this.rows = new Map();
+    this.dirty = false;   // c'e' qualcosa da salvare e da riverificare?
     this.active = null;   // riga su cui si sta lavorando: si evidenziano i suoi riferimenti
     this.citing = null;   // riga il cui campo rif. ha il fuoco: i bersagli diventano cliccabili
   }
@@ -111,8 +116,40 @@ export class ProofView {
   persist() { this.repository.save('proof', this.serialize()); }
 
   /* ---- rendering ---- */
+  /**
+   * Aggiorna solo gli esiti: pallini, messaggi, verdetto. Non tocca i campi,
+   * quindi non sposta il cursore ne' chiude i menu aperti. Il disegno completo
+   * (`render`) serve solo quando cambia la struttura della prova.
+   */
+  paint(outcome = this.checkProof.execute({ proof: this.proof })) {
+    const byId = new Map(outcome.lines.map(l => [l.id, l]));
+    this.rows.forEach(({ wrapper, status, note }, id) => {
+      const result = byId.get(id) ?? { status: 'empty' };
+      const wrong = result.status === 'invalid' || result.status === 'malformed';
+      wrapper.classList.toggle('bad', wrong);
+      wrapper.classList.toggle('good', result.status === 'ok');
+      status.className = 'pstat' + (result.status === 'ok' ? ' ok' : wrong ? ' no' : '');
+      status.textContent = result.status === 'ok' || wrong ? '●' : '○';
+      status.style.color = result.status === 'ok' || wrong ? '' : 'var(--rule)';
+      status.title = wrong ? (result.message || '') : result.status === 'ok' ? 'corretta' : '';
+      note.hidden = !(wrong && result.message);
+      note.firstChild.textContent = wrong ? (result.message || '') : '';
+    });
+
+    const verdict = clear($('#pf-verdict'));
+    const chipClass = VERDICT_CHIP[outcome.verdict.kind];
+    if (chipClass) verdict.appendChild(el('span', `chip ${chipClass}`, outcome.verdict.message));
+
+    const written = outcome.lines.filter(l => l.status !== 'empty').length;
+    const empty = $('#pf-empty');
+    if (empty) empty.hidden = written > 0;
+    const notice = $('#pf-notice');
+    if (notice) { notice.textContent = this.notice || ''; notice.hidden = !this.notice; }
+  }
+
   render() {
     const host = clear($('#pf-proof'));
+    this.rows = new Map();
     const outcome = this.checkProof.execute({ proof: this.proof });
     const byId = new Map(outcome.lines.map(l => [l.id, l]));
     this.index = this.proof.index();
@@ -144,7 +181,7 @@ export class ProofView {
           value: subproof.constant || '',
           used: without(() => namesInUse(this.proof)),
           fresh: () => without(() => freshConstant(this.proof)),
-          onChange: name => { subproof.constant = name; },
+          onChange: name => { subproof.constant = name; this.dirty = true; },
           onCommit: () => { this.render(); this.persist(); }
         }));
       }
@@ -152,51 +189,69 @@ export class ProofView {
       const text = el('input', 'pf formula');
       text.value = line.text; text.placeholder = 'formula'; text.dataset.fk = 'f' + line.id;
       text.addEventListener('focus', () => this.focusRow(line.id, false, text));
-      text.addEventListener('input', () => { line.text = text.value; });
+      text.addEventListener('input', () => { line.text = text.value; this.dirty = true; });
       text.addEventListener('blur', e => this.commit(e));
       text.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); line.text = text.value; this.insertAfter(container, line); }
+        if (e.key === 'Tab') { e.preventDefault(); line.text = text.value; this.restructure(line.id, e.shiftKey ? 'outdent' : 'indent'); }
       });
       body.appendChild(text);
 
-      const rule = el('select', 'prule');
-      RULE_NAMES.forEach(name => {
-        const option = el('option', null, name || '— regola —');
-        option.value = name;
-        rule.appendChild(option);
-      });
-      rule.value = line.rule || '';
-      rule.addEventListener('change', () => { line.rule = rule.value; this.render(); this.persist(); });
-      body.appendChild(rule);
+      const just = el('span', 'pjust');
+      just.appendChild(rulePicker({
+        value: line.rule || '',
+        open: this.openRule === line.id,
+        fk: 'rule' + line.id,
+        onOpen: () => { this.openRule = line.id; this.focusKey = 'rule' + line.id; this.render(); },
+        onClose: () => { if (this.openRule === line.id) { this.openRule = null; this.render(); } },
+        onPick: name => {
+          line.rule = name; this.openRule = null; this.dirty = false;
+          this.focusKey = 'r' + line.id; this.render(); this.persist();
+        }
+      }));
 
       const citations = el('input', 'prefs');
       citations.value = line.citations || ''; citations.placeholder = 'rif.';
       citations.dataset.fk = 'r' + line.id;
       citations.title = 'Scrivi i riferimenti, oppure clicca il numero di una riga o il bordo di una sottodimostrazione';
       citations.addEventListener('focus', () => this.focusRow(line.id, true, citations));
-      citations.addEventListener('input', () => { line.citations = citations.value; });
-      citations.addEventListener('blur', e => { this.citing = null; this.commit(e); });
-      body.appendChild(citations);
+      citations.addEventListener('input', () => { line.citations = citations.value; this.dirty = true; });
+      citations.addEventListener('blur', e => { this.citing = null; this.applyHighlights(); this.commit(e); });
+      just.appendChild(citations);
+      body.appendChild(just);
 
-      const result = byId.get(line.id) ?? { status: 'empty' };
       const status = el('span', 'pstat');
-      if (result.status === 'ok') { status.classList.add('ok'); status.textContent = '●'; status.title = 'corretta'; }
-      else if (result.status === 'invalid' || result.status === 'malformed') {
-        status.classList.add('no'); status.textContent = '●'; status.title = result.message || '';
-      } else { status.textContent = '○'; status.style.color = 'var(--rule)'; }
       body.appendChild(status);
 
-      const remove = el('button', 'xbtn', '×');
-      remove.addEventListener('click', () => {
-        container.items.splice(container.items.indexOf(line), 1);
-        this.render(); this.persist();
-      });
-      body.appendChild(remove);
+      const actions = el('span', 'pacts');
+      const command = (glyph, title, enabled, action) => {
+        const button = el('button', 'pact', glyph);
+        button.type = 'button';
+        button.tabIndex = -1;
+        button.title = title;
+        button.setAttribute('aria-label', title);
+        button.disabled = !enabled;
+        button.addEventListener('mousedown', e => e.preventDefault());
+        button.addEventListener('click', action);
+        return button;
+      };
+      actions.append(
+        command('⇥', 'Rientra di un livello (Tab)', canIndent(this.proof, line.id), () => this.restructure(line.id, 'indent')),
+        command('⇤', 'Esci dalla sottodimostrazione (Maiusc+Tab)', canOutdent(this.proof, line.id), () => this.restructure(line.id, 'outdent')),
+        command('×', 'Elimina la riga', true, () => {
+          container.items.splice(container.items.indexOf(line), 1);
+          this.render(); this.persist();
+        })
+      );
+      body.appendChild(actions);
 
       row.appendChild(body);
       wrapper.appendChild(row);
-      if (result.message && (result.status === 'invalid' || result.status === 'malformed'))
-        wrapper.appendChild(el('p', 'pmsg', result.message));
+      const note = el('p', 'pmsg');
+      note.appendChild(el('span'));
+      note.hidden = true;
+      wrapper.appendChild(note);
+      this.rows.set(line.id, { wrapper, status, note });
       return wrapper;
     };
 
@@ -253,11 +308,8 @@ export class ProofView {
       });
     }
     host.appendChild(scope);
+    this.paint(outcome);
     this.applyHighlights();
-
-    const verdict = clear($('#pf-verdict'));
-    const chipClass = VERDICT_CHIP[outcome.verdict.kind];
-    if (chipClass) verdict.appendChild(el('span', `chip ${chipClass}`, outcome.verdict.message));
 
     if (this.focusKey) {
       const field = host.querySelector(`[data-fk="${this.focusKey}"]`);
@@ -272,10 +324,16 @@ export class ProofView {
    * l'utente sta andando verrebbe distrutto sotto il suo clic: qui lo si
    * riconosce (relatedTarget) e gli si restituisce il fuoco dopo il disegno.
    */
-  commit(event) {
-    const next = event?.relatedTarget;
-    if (next?.dataset?.fk) this.focusKey = next.dataset.fk;
-    this.render();
+  /**
+   * Fine della scrittura in un campo: si riverifica e si salva, ma la struttura
+   * resta quella che e'. Cosi' il campo su cui l'utente sta passando non viene
+   * sostituito sotto il suo clic e il cursore non salta.
+   */
+  commit() {
+    if (!this.dirty) return;
+    this.dirty = false;
+    this.paint();
+    this.applyHighlights();
     this.persist();
   }
 
@@ -330,6 +388,17 @@ export class ProofView {
     if (!entry || !this.citableFor(entry).has(token)) return;
     entry.line.citations = toggleCitation(entry.line.citations, token);
     this.focusKey = 'r' + entry.line.id;
+    this.render();
+    this.persist();
+  }
+
+  /** Rientra o fa uscire una riga, tenendo il fuoco dove sta lavorando l'utente. */
+  restructure(lineId, direction) {
+    const move = direction === 'indent' ? indentLine : outdentLine;
+    const result = move(this.proof, lineId);
+    if (!result.ok) { this.notice = result.reason; }
+    else this.notice = '';
+    this.focusKey = 'f' + lineId;
     this.render();
     this.persist();
   }

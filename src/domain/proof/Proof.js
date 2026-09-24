@@ -33,7 +33,7 @@ export class Proof {
 
   /**
    * Numera le righe e registra, per ciascuna, la catena dei contenitori che la
-   * racchiudono. La catena e' cio' che rende decidibile l'accessibilita'.
+   * racchiudono. La catena e' ciò che rende decidibile l'accessibilita'.
    */
   index() {
     const lines = [], subproofs = [];

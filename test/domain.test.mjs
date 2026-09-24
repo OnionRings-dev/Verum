@@ -13,6 +13,7 @@ import { World, Block, Shape, Size, WorldInvariantViolation, PLACEMENT } from '.
 import { Proof, Line, Subproof, Justification, resetIds } from '../src/domain/proof/Proof.js';
 import { freshConstant, namesInUse, isConstantName } from '../src/domain/proof/constants.js';
 import { citationTokens, toggleCitation } from '../src/domain/proof/citations.js';
+import { indentLine, outdentLine, canIndent, canOutdent } from '../src/domain/proof/edit.js';
 import { BuildTruthTable } from '../src/application/BuildTruthTable.js';
 import { EvaluateInWorld } from '../src/application/EvaluateInWorld.js';
 import { CheckProof } from '../src/application/CheckProof.js';
@@ -313,4 +314,100 @@ export default function suite(t) {
   t('riferimenti: secondo clic toglie', toggleCitation('1, 2-7', '2-7') === '1');
   t('riferimenti: da vuoto',       toggleCitation('', '4') === '4');
   t('riferimenti: toglie l\u2019ultimo', toggleCitation('4', '4') === '');
+
+  /* ---------- rientra e sporgi ---------- */
+  const shape = proof => proof.items.map(i => i.kind === 'line'
+    ? (i.text || '·')
+    : '[' + i.items.map(x => x.kind === 'line' ? (x.text || '·') : '[…]').join(' ') + ']').join(' ');
+
+  resetIds(1);
+  const editable = new Proof({ items: [
+    new Line({ text:'P', rule:Justification.PREMISE }),
+    new Line({ text:'Q' }),
+    new Line({ text:'R' })
+  ]});
+  t('rientra: nasce una sottodimostrazione', indentLine(editable, editable.items[1].id).ok && shape(editable) === 'P [Q] R');
+  t('rientra: la riga diventa assunzione', editable.items[1].items[0].rule === Justification.ASSUMPTION);
+  t('rientra: la riga sotto entra nel blocco esistente',
+    indentLine(editable, editable.items[2].id).ok && shape(editable) === 'P [Q R]');
+  t('rientra: la seconda non e\u2019 un\u2019assunzione', editable.items[1].items[1].rule === '');
+  t('sporgi: l\u2019ultima esce', outdentLine(editable, editable.items[1].items[1].id).ok && shape(editable) === 'P [Q] R');
+  t('sporgi: l\u2019assunzione rimasta sola scioglie il blocco',
+    outdentLine(editable, editable.items[1].items[0].id).ok && shape(editable) === 'P Q R');
+  t('sporgi: al livello principale non fa nulla', outdentLine(editable, editable.items[2].id).ok === false);
+
+  resetIds(1);
+  const premise = new Proof({ items: [ new Line({ text:'P', rule:Justification.PREMISE }) ] });
+  t('rientra: una premessa non rientra', indentLine(premise, premise.items[0].id).ok === false);
+  t('rientra: e il pulsante lo sa', canIndent(premise, premise.items[0].id) === false);
+
+  resetIds(1);
+  const middle = new Proof({ items: [ new Subproof({ items: [
+    new Line({ text:'P', rule:Justification.ASSUMPTION }),
+    new Line({ text:'Q' }),
+    new Line({ text:'R' })
+  ]})]});
+  const inner = middle.items[0].items;
+  t('sporgi: solo l\u2019ultima riga del blocco', outdentLine(middle, inner[1].id).ok === false);
+  t('sporgi: il pulsante lo sa', canOutdent(middle, inner[1].id) === false && canOutdent(middle, inner[2].id) === true);
+
+  // la prova resta verificabile dopo la ristrutturazione
+  resetIds(1);
+  const rebuilt = new Proof({ goal:'Q → P', items: [
+    new Line({ text:'P', rule:Justification.PREMISE }),
+    new Line({ text:'Q' }),
+    new Line({ text:'P', rule:'Reit', citations:'1' }),
+    new Line({ text:'Q → P', rule:'→ Intro' })
+  ]});
+  indentLine(rebuilt, rebuilt.items[1].id);
+  indentLine(rebuilt, rebuilt.items[2].id);
+  rebuilt.items[2].citations = '2-3';
+  t('ristrutturata: la prova torna completa', check.execute({ proof: rebuilt }).verdict.kind === 'complete');
+
+  /* ---------- la costante nuova deve esserlo davvero ---------- */
+  resetIds(1);
+  const notFresh = new Proof({ goal:'∀x Cube(x)', items: [
+    new Line({ text:'Cube(a)', rule:Justification.PREMISE }),
+    new Subproof({ constant:'a', items: [
+      new Line({ rule:Justification.ASSUMPTION }),
+      new Line({ text:'Cube(a)', rule:'Reit', citations:'1' })
+    ]}),
+    new Line({ text:'∀x Cube(x)', rule:'∀ Intro', citations:'2-3' })
+  ]});
+  const notFreshOutcome = check.execute({ proof: notFresh });
+  t('∀ Intro: costante che compare fuori e\u2019 rifiutata', notFreshOutcome.lines[3].status === 'invalid');
+  t('∀ Intro: il motivo e\u2019 spiegato', notFreshOutcome.lines[3].message.includes('fuori dalla sottodimostrazione'));
+
+  resetIds(1);
+  const inGoal = new Proof({ goal:'Cube(c)', items: [
+    new Subproof({ constant:'c', items: [
+      new Line({ rule:Justification.ASSUMPTION }),
+      new Line({ text:'Cube(c) ∨ ¬Cube(c)', rule:'Taut Con' })
+    ]}),
+    new Line({ text:'∀x (Cube(x) ∨ ¬Cube(x))', rule:'∀ Intro', citations:'1-2' })
+  ]});
+  t('∀ Intro: costante presente nell\u2019obiettivo e\u2019 rifiutata', check.execute({ proof: inGoal }).lines[2].status === 'invalid');
+
+  resetIds(1);
+  const freshOk = new Proof({ goal:'∀x (Cube(x) ∨ ¬Cube(x))', items: [
+    new Line({ text:'Tet(a)', rule:Justification.PREMISE }),
+    new Subproof({ constant:'k', items: [
+      new Line({ rule:Justification.ASSUMPTION }),
+      new Line({ text:'Cube(k) ∨ ¬Cube(k)', rule:'Taut Con' })
+    ]}),
+    new Line({ text:'∀x (Cube(x) ∨ ¬Cube(x))', rule:'∀ Intro', citations:'2-3' })
+  ]});
+  t('∀ Intro: costante davvero nuova accettata', check.execute({ proof: freshOk }).verdict.kind === 'complete');
+
+  resetIds(1);
+  const existsReuse = new Proof({ goal:'Small(a)', items: [
+    new Line({ text:'∃x Small(x)', rule:Justification.PREMISE }),
+    new Line({ text:'Cube(a)', rule:Justification.PREMISE }),
+    new Subproof({ constant:'a', items: [
+      new Line({ text:'Small(a)', rule:Justification.ASSUMPTION }),
+      new Line({ text:'Small(a)', rule:'Reit', citations:'3' })
+    ]}),
+    new Line({ text:'Small(a)', rule:'∃ Elim', citations:'1,3-4' })
+  ]});
+  t('∃ Elim: costante riutilizzata e\u2019 rifiutata', check.execute({ proof: existsReuse }).lines[4].status === 'invalid');
 }

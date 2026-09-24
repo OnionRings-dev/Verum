@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Verum-Proprietary
 /**
  * Dominio · Mondo · Block
- * Entita' con identita' (id). Forma, dimensione, posizione e nomi assegnati.
+ * Entita' con identità (id). Forma, dimensione, posizione e nomi assegnati.
  */
 export const Shape = Object.freeze({ TET:'Tet', CUBE:'Cube', DODEC:'Dodec' });
 export const Size  = Object.freeze({ SMALL:1, MEDIUM:2, LARGE:3 });

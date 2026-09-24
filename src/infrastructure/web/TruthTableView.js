@@ -4,7 +4,7 @@
  * Infrastruttura · Web · schermata Tavole.
  * Sa disegnare, non sa di logica: riceve un DTO dal caso d'uso e lo rende.
  */
-import { $, $$, el, clear } from './dom.js';
+import { $, $$, el, clear, debounce } from './dom.js';
 
 const KIND_LABEL = { tautology:['t','tautologia'], contradiction:['f','contraddizione'], contingent:['n','contingente'] };
 
@@ -13,6 +13,7 @@ export class TruthTableView {
     this.buildTruthTable = buildTruthTable;
     this.repository = repository;
     this.sentences = [''];
+    this.refresh = debounce(() => this.build(), 350);
   }
 
   async start() {
@@ -21,13 +22,19 @@ export class TruthTableView {
     if (sentences.length) this.sentences = sentences;
 
     $('#tt-add').addEventListener('click', () => { this.sentences.push(''); this.renderInputs(); this.focusLast(); });
-    $('#tt-clear').addEventListener('click', () => { this.sentences = ['']; this.renderInputs(); clear($('#tt-out')); this.persist(); });
-    $('#tt-build').addEventListener('click', () => this.build());
+    $('#tt-clear').addEventListener('click', () => { this.sentences = ['']; this.renderInputs(); this.persist(); this.build(); });
     $('#tt-example').addEventListener('click', () => {
       this.sentences = ['P → Q', 'Q → R', 'P → R'];
       this.renderInputs(); this.build();
     });
     this.renderInputs();
+    this.build();
+  }
+
+  addRow() {
+    this.sentences.push('');
+    this.renderInputs();
+    this.focusLast();
   }
 
   persist() { this.repository.save('truth-table', { sentences: this.sentences }); }
@@ -42,16 +49,22 @@ export class TruthTableView {
       const input = el('input', 'finput formula');
       input.value = value;
       input.placeholder = 'es. P ∧ ¬Q';
-      input.addEventListener('input', () => { this.sentences[i] = input.value; input.classList.remove('bad'); });
+      input.addEventListener('input', () => {
+        this.sentences[i] = input.value;
+        input.classList.remove('bad');
+        this.refresh();                     // la tavola si rifa' da sola
+      });
       input.addEventListener('change', () => this.persist());
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); this.build(); } });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); this.refresh.now(); this.addRow(); }
+      });
 
       const remove = el('button', 'xbtn', '×');
       remove.title = 'Elimina';
       remove.addEventListener('click', () => {
         this.sentences.splice(i, 1);
         if (!this.sentences.length) this.sentences = [''];
-        this.renderInputs(); this.persist();
+        this.renderInputs(); this.persist(); this.build();
       });
 
       row.append(input, remove);
@@ -71,14 +84,28 @@ export class TruthTableView {
       out.appendChild(el('p', 'err', `Riga ${result.errors[0].position + 1}: ${result.errors[0].message}`));
       return;
     }
-    if (result.status === 'empty') { out.appendChild(el('p', 'hint', 'Inserisci almeno un enunciato.')); return; }
+    if (result.status === 'empty') { out.appendChild(this.emptyState()); return; }
     if (result.status === 'too-large') {
-      out.appendChild(el('p', 'err', `Troppe lettere proposizionali: il limite e' ${result.limit}.`));
+      out.appendChild(el('p', 'err', `Troppe lettere proposizionali: il limite è ${result.limit}.`));
       return;
     }
 
     out.appendChild(this.renderTable(result));
     out.appendChild(this.renderAnalysis(result));
+  }
+
+  /** Cosa si vede prima di aver scritto qualcosa. */
+  emptyState() {
+    const box = el('div', 'blank');
+    box.appendChild(el('p', 'blank-title', 'La tavola compare qui'));
+    box.appendChild(el('p', 'hint',
+      'Scrivi un enunciato a sinistra: la tavola si costruisce da sola mentre digiti. ' +
+      'Con piu\u2019 enunciati, l\u2019ultimo vale come conclusione e i precedenti come premesse.'));
+    const example = el('button', 'btn', 'Carica un esempio');
+    example.type = 'button';
+    example.addEventListener('click', () => $('#tt-example').click());
+    box.appendChild(example);
+    return box;
   }
 
   renderTable({ atoms, headers, rows }) {
