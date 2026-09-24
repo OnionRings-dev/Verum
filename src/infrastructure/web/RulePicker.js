@@ -5,7 +5,7 @@
  *
  * Al posto di un menu a tendina: un'etichetta che si legge come la
  * giustificazione scritta a mano ("∧ Elim"), e che aperta mostra le regole
- * raggruppate, filtrabili scrivendo. Cosi' la riga resta leggibile come una
+ * raggruppate, filtrabili scrivendo. Così la riga resta leggibile come una
  * riga di dimostrazione, non come un campo di un modulo.
  */
 import { el, clear } from './dom.js';

@@ -9,7 +9,7 @@ Come dimostrare la paternità del progetto: vedi `PROPRIETA.md`.
 
 Tre strumenti web per un corso di logica del primo ordine:
 
-- **Tavole** — tavole di verita' complete, validita' dell'argomento, soddisfacibilita' congiunta,
+- **Tavole** — tavole di verità complete, validita' dell'argomento, soddisfacibilita' congiunta,
   ricostruite mentre si scrive.
 - **Mondi** — editor di mondi di blocchi e valutazione di enunciati quantificati, aggiornata a
   ogni modifica del tavolo.
@@ -24,7 +24,7 @@ Tre strumenti web per un corso di logica del primo ordine:
 
 Ogni schermata ha tre aspetti (Minimal, Neon, Dark), selezionabili dalla barra in alto; la scelta viene ricordata.
 
-Il progetto e' una riscrittura originale e indipendente. Non contiene, non decompila
+Il progetto è una riscrittura originale e indipendente. Non contiene, non decompila
 e non deriva da codice di software didattici esistenti.
 
 ## Avvio
@@ -32,7 +32,33 @@ e non deriva da codice di software didattici esistenti.
 I moduli ES non si caricano da `file://`. Serve un server statico:
 
     python3 -m http.server 8000     # poi apri http://localhost:8000
-    # oppure: npx serve .
+
+Su Windows il comando spesso è `python` senza il 3:
+
+    python -m http.server 8000
+
+Se non hai Python, va bene qualunque server statico:
+
+    npx serve .
+
+## Scorciatoie
+
+`?` apre l'elenco completo dentro l'applicazione. Le principali:
+
+| tasto | dove | cosa fa |
+|---|---|---|
+| `Invio` | Derivazioni, Tavole, Mondi | aggiunge una riga sotto |
+| `Ctrl + Invio` | Derivazioni | apre una sottodimostrazione |
+| `Tab` / `Maiusc + Tab` | Derivazioni | fa rientrare o uscire la riga |
+| `Backspace` su riga vuota | ovunque | elimina la riga |
+| frecce | Mondi | spostano il blocco selezionato |
+| `Backspace` o `Canc` | Mondi | elimina il blocco selezionato |
+| `1` `2` `3` / `t` `c` `d` | Mondi | dimensione / forma del blocco |
+| `a`–`f` | Mondi | assegna o toglie il nome |
+| `Alt + 1 / 2 / 3` | ovunque | passa da uno strumento all'altro |
+
+I tasti singoli valgono solo fuori dai campi di testo: dentro una formula,
+`c` scrive una c.
 
 ## Test
 
@@ -44,7 +70,7 @@ Le singole suite, nessuna delle quali avvia un browser vero:
 
 | comando | cosa verifica |
 |---|---|
-| `node test/run.mjs` | nucleo (parser, semantica, regole), importazione dei file del corso, **esempi di riferimento** con esito noto, robustezza su input storti, conformita' architetturale |
+| `node test/run.mjs` | nucleo (parser, semantica, regole), importazione dei file del corso, **esempi di riferimento** con esito noto, robustezza su input storti, conformità architetturale |
 | `node test/smoke.test.mjs` | il bundle consegnato si avvia e le funzioni principali rispondono |
 | `node test/scenari.test.mjs` | percorsi d'uso completi: si costruiscono tavole, mondi e prove usando solo clic e tastiera, e si controlla il risultato |
 | `node test/stress.test.mjs` | pestaggio casuale dell'interfaccia, raffiche su rientra/sporgi e sui menu, prove lunghe, stato salvato corrotto |
@@ -76,13 +102,13 @@ e verificate da `test/architecture.test.mjs`.
 ## Autore
 
 Liam Michael Boland — <liammichael.boland@studenti.unimi.it>
-Universita' degli Studi di Milano, progetto di tesi.
+Università degli Studi di Milano, progetto di tesi.
 
 ## Licenza
 
 Tutti i diritti riservati. Vedi `LICENSE`: la consultazione e l'esecuzione a
 scopo di valutazione accademica sono consentite, ogni altro uso richiede una
-licenza scritta. `PROPRIETA.md` descrive come e' documentata la paternita' del
+licenza scritta. `PROPRIETA.md` descrive come è documentata la paternità del
 progetto.
 
 I materiali del corso (i programmi originali, il PDF delle regole, i file di

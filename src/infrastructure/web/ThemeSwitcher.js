@@ -3,13 +3,13 @@
 /**
  * Infrastruttura · Web · selettore dell'aspetto.
  *
- * L'aspetto e' pura presentazione: vive interamente qui e nel CSS. Riempie ogni
+ * L'aspetto è pura presentazione: vive interamente qui e nel CSS. Riempie ogni
  * segnaposto [data-themes] (uno per schermata), tiene i bottoni sincronizzati
  * e salva la scelta attraverso la porta WorkspaceRepository.
  *
  * Usa l'attributo data-look, non data-theme: data-theme può essere impostato
  * dall'ambiente che ospita la pagina (sistema o visualizzatore) e non deve
- * essere sovrascritto. Finche' l'utente non sceglie, Verum segue quello.
+ * essere sovrascritto. Finché l'utente non sceglie, Verum segue quello.
  */
 import { $$, el } from './dom.js';
 

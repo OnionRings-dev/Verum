@@ -3,7 +3,7 @@
 /**
  * Dominio · Mondo · World
  *
- * Il mondo di blocchi e' l'interpretazione: fissa il dominio (i blocchi),
+ * Il mondo di blocchi è l'interpretazione: fissa il dominio (i blocchi),
  * il riferimento delle costanti e l'estensione di ogni predicato.
  * Convenzione: colonna 0 = sinistra, riga 0 = fondo del tavolo.
  */
@@ -58,9 +58,9 @@ export class World {
   }
 
   /**
-   * Verifica se `candidate` ({x, y, size}) puo' stare su un tavolo che contiene
+   * Verifica se `candidate` ({x, y, size}) può stare su un tavolo che contiene
    * `blocks`, ignorando il blocco `ignoreId` (quello che si sta spostando o
-   * ridimensionando). Lavora su dati semplici, cosi' l'interfaccia puo'
+   * ridimensionando). Lavora su dati semplici, così l'interfaccia può
    * interrogarla prima di modificare qualunque cosa.
    * @returns {{reason:string, blocking:object}|null}
    */
@@ -115,7 +115,7 @@ export class World {
     return inside(a.x, b.x, c.x) && inside(a.y, b.y, c.y);
   }
 
-  /** Verita' di una formula in questo mondo, sotto l'assegnazione g. */
+  /** Verità di una formula in questo mondo, sotto l'assegnazione g. */
   satisfies(f, g = {}) {
     switch (f.t) {
       case 'bot': return false;

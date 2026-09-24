@@ -27,7 +27,7 @@ try{var t=JSON.parse(localStorage.getItem('verum:theme'));if(t)document.document
 
 /* ============================================================
    TEMI
-   Ogni colore dell'interfaccia passa da un token. Un tema e'
+   Ogni colore dell'interfaccia passa da un token. Un tema è
    solo un diverso insieme di valori per gli stessi token.
    ============================================================ */
 :root,
@@ -49,8 +49,8 @@ try{var t=JSON.parse(localStorage.getItem('verum:theme'));if(t)document.document
   --grain-opacity:.22;
 }
 /* Scuro: scelto esplicitamente, oppure ereditato dal sistema o dal visualizzatore
-   finche' l'utente non sceglie un aspetto. data-look e' l'attributo di Verum;
-   data-theme e' quello che puo' impostare l'ambiente che ospita la pagina. */
+   finché l'utente non sceglie un aspetto. data-look è l'attributo di Verum;
+   data-theme è quello che può impostare l'ambiente che ospita la pagina. */
 :root[data-look="dark"],
 :root[data-theme="dark"]:not([data-look]){
   --hover:#23282D;
@@ -454,6 +454,21 @@ details.docs td:first-child{font-family:var(--f-txt);white-space:nowrap;color:va
   .kp-key{width:26px;height:26px;font-size:15px}
   .libpop{width:min(340px,92vw)}
 }
+/* ---------- pannello delle scorciatoie ---------- */
+.sc-overlay{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:20px;
+  background:rgba(10,12,16,.55)}
+.sc-overlay[hidden]{display:none}
+.sc-card{width:min(560px,100%);max-height:84vh;overflow:auto;background:var(--panel);color:var(--ink);
+  border:1px solid var(--rule);border-radius:8px;padding:20px 22px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.sc-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.sc-head h2{font-family:var(--f-txt);font-weight:400;font-size:26px;margin:0}
+.sc-group{font-family:var(--f-ui);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);
+  margin:18px 0 6px;font-weight:600}
+.sc-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.sc-table td{padding:4px 8px 4px 0;border-bottom:1px solid var(--rule2);vertical-align:top;color:var(--ink2)}
+.sc-table td:first-child{width:42%;white-space:nowrap}
+kbd{font-family:var(--f-ui);font-size:12px;background:var(--panel-2);border:1px solid var(--rule);
+  border-bottom-width:2px;border-radius:4px;padding:1px 6px;color:var(--ink)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -463,7 +478,8 @@ details.docs td:first-child{font-family:var(--f-txt);white-space:nowrap;color:va
 <!-- ============ LANDING ============ -->
 <section id="s-home" class="screen on">
  <div class="land">
-  <div class="land-top"><div class="themes" data-themes></div></div>
+  <div class="land-top"><button class="btn sm ghost" data-shortcuts title="Scorciatoie da tastiera (?)">Scorciatoie</button>
+    <div class="themes" data-themes></div></div>
   <div class="land-head">
     <h1 class="mark">Verum</h1>
     <p class="tagline">Tre strumenti per la logica del primo ordine: costruire tavole di verità, valutare enunciati in un mondo di blocchi, e costruire derivazioni in stile Fitch.</p>
@@ -554,6 +570,7 @@ details.docs td:first-child{font-family:var(--f-txt);white-space:nowrap;color:va
     <button class="back" data-home>← Verum</button>
     <h1>Tavole</h1>
     <span class="spacer"></span>
+    <button class="btn sm ghost" data-shortcuts title="Scorciatoie da tastiera (?)">Scorciatoie</button>
     <div class="themes" data-themes></div>
     <button class="btn" id="tt-example">Carica esempio</button>
   </div>
@@ -594,6 +611,7 @@ details.docs td:first-child{font-family:var(--f-txt);white-space:nowrap;color:va
     <button class="back" data-home>← Verum</button>
     <h1>Mondi</h1>
     <span class="spacer"></span>
+    <button class="btn sm ghost" data-shortcuts title="Scorciatoie da tastiera (?)">Scorciatoie</button>
     <div class="themes" data-themes></div>
     <button class="btn" id="wd-example">Mondo di esempio</button>
     <button class="btn" id="wd-clearworld">Svuota mondo</button>
@@ -648,6 +666,7 @@ details.docs td:first-child{font-family:var(--f-txt);white-space:nowrap;color:va
     <button class="back" data-home>← Verum</button>
     <h1>Derivazioni</h1>
     <span class="spacer"></span>
+    <button class="btn sm ghost" data-shortcuts title="Scorciatoie da tastiera (?)">Scorciatoie</button>
     <div class="themes" data-themes></div>
     <button class="btn" id="pf-example">Carica esempio</button>
     <button class="btn" id="pf-reset">Nuova prova</button>
@@ -694,5 +713,6 @@ details.docs td:first-child{font-family:var(--f-txt);white-space:nowrap;color:va
 </section>
 
 <script type="module" src="./src/main.js"></script>
+<div class="sc-overlay" id="shortcuts" hidden></div>
 </body>
 </html>

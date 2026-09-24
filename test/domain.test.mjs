@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Verum-Proprietary
 /**
  * Test del nucleo. Nessun browser, nessun mock, nessuna dipendenza esterna:
- * il dominio e i casi d'uso si testano perche' non toccano infrastruttura.
+ * il dominio e i casi d'uso si testano perché non toccano infrastruttura.
  * Esecuzione:  node test/run.mjs
  */
 import { parse, tryParse } from '../src/domain/language/Parser.js';
@@ -27,7 +27,7 @@ export default function suite(t) {
   t('∧ a destra parentesi',     print(parse('P & (Q & R)')) === 'P ∧ (Q ∧ R)');
   t('quantificatore ascii',     print(parse('@x (Cube(x) $ Small(x))')) === '∀x (Cube(x) → Small(x))');
   t('esistenziale ascii',       print(parse('/y Tet(y)')) === '∃y Tet(y)');
-  t('identita',                 print(parse('a=b')) === 'a = b');
+  t('identità',                 print(parse('a=b')) === 'a = b');
   t('disuguaglianza',           print(parse('a != b')) === '¬a = b');
   t('falso',                    print(parse('^')) === '⊥');
   t('# e\u2019 diverso da',        print(parse('x # y')) === '¬x = y');
@@ -86,7 +86,7 @@ export default function suite(t) {
   t('mondo: universale falso',  val('∀x Cube(x)') === 'false');
   t('mondo: esistenziale',      val('∃x (Tet(x) ∧ Small(x))') === 'true');
   t('mondo: annidato',          val('∀x ∃y (Larger(y, x) ∨ x = y)') === 'true');
-  t('mondo: identita',          val('a = a') === 'true');
+  t('mondo: identità',          val('a = a') === 'true');
   t('mondo: nome non assegnato', val('Cube(f)') === 'undefined');
   t('mondo: predicato ignoto',  val('Verde(a)') === 'undefined');
   t('mondo: aritа errata',      val('Cube(a, b)') === 'undefined');

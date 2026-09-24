@@ -1,6 +1,6 @@
 {
   "name": "verum",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Strumenti web per la logica del primo ordine: tavole di verita', mondi di blocchi, derivazioni in stile Fitch.",
   "type": "module",
   "private": true,

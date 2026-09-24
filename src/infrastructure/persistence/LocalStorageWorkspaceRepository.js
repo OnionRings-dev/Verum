@@ -3,7 +3,7 @@
 /**
  * Infrastruttura · Persistenza · adattatore su localStorage.
  * Sostituirlo con un adattatore HTTP verso un backend non richiede di toccare
- * ne' il dominio ne' i casi d'uso: cambia solo la riga del composition root.
+ * né il dominio né i casi d'uso: cambia solo la riga del composition root.
  */
 import { WorkspaceRepository } from '../../application/ports.js';
 

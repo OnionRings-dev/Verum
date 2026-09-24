@@ -79,7 +79,7 @@ Una firma lega ogni commit a una chiave che possiedi solo tu. Con Git per
 Windows, da PowerShell:
 
 ```powershell
-# 1. crea una chiave (se non ne hai gia' una), usa l'email del tuo account GitHub
+# 1. crea una chiave (se non ne hai già una), usa l'email del tuo account GitHub
 ssh-keygen -t ed25519 -C "liammichael.boland@studenti.unimi.it"
 
 # 2. di' a Git di firmare con quella chiave

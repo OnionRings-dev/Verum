@@ -6,9 +6,9 @@
  *
  * Formato, ricavato dai file stessi: intestazione su righe separate da CR
  * (versione, piattaforma, "SntP", numero di enunciati), poi gli enunciati
- * separati da form feed. Il testo dopo ';' e' un commento. In coda c'e' una
+ * separati da form feed. Il testo dopo ';' è un commento. In coda c'è una
  * somma di controllo "s=NNNN;". La notazione ASCII (~ & | $ % @ / # ^ [ ])
- * e' quella che il parser di Verum accetta già.
+ * è quella che il parser di Verum accetta già.
  *
  * Gli enunciati vuoti restano: servono a mantenere la numerazione usata dal
  * libro negli esercizi. Gli enunciati mal formati restano come testo: alcuni

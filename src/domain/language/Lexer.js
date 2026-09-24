@@ -10,7 +10,7 @@ export class SyntaxError_ extends Error {
 
 /*
  * Le scorciatoie ASCII seguono la convenzione dei file di esercizio del corso,
- * verificata sui 67 file .sen originali: # e' "diverso da" (x # y), ^ e' ⊥,
+ * verificata sui 67 file .sen originali: # è "diverso da" (x # y), ^ è ⊥,
  * [ ] valgono come parentesi tonde.
  */
 const ONE_CHAR = [

@@ -41,7 +41,7 @@ for (const theme of ['neon', 'dark', 'minimal']) {
 }
 t('tema ricordato', dom.window.localStorage.getItem('verum:theme') === '"minimal"');
 
-// all'ingresso ogni strumento e' vuoto
+// all'ingresso ogni strumento è vuoto
 t('tavole: nessun enunciato precaricato', [...d.querySelectorAll('#tt-rows .finput')].every(i => i.value === ''));
 t('tavole: nessuna tavola finche\u2019 non si scrive', !d.querySelector('#tt-out table.tt'));
 t('tavole: stato vuoto spiegato', !!d.querySelector('#tt-out .blank'));
@@ -60,7 +60,7 @@ t('gradienti condivisi presenti', !!d.getElementById('vg-top'));
 d.querySelector('#wd-example').click();
 t('pezzi disegnati', d.querySelectorAll('#wd-board .blk svg').length > 0);
 t('valutazione nel mondo', d.querySelectorAll('#wd-rows .chip').length === 5);
-// regola dei blocchi grandi, sull'esempio: a e' grande in colonna 2, riga 7
+// regola dei blocchi grandi, sull'esempio: a è grande in colonna 2, riga 7
 const cellAt = (x, y) => d.querySelectorAll('#wd-board .cell')[y * 8 + x];
 const blocksNow = () => d.querySelectorAll('#wd-board .blk').length;
 t('area del grande tratteggiata', cellAt(2, 2).classList.contains('blocked') && cellAt(0, 0).classList.contains('blocked'));
@@ -71,7 +71,7 @@ t('clic nell\u2019area del grande: nessun blocco aggiunto', blocksNow() === befo
 t('clic nell\u2019area del grande: spiegazione mostrata', d.querySelector('#wd-insp .notice')?.textContent.includes('grande'));
 cellAt(3, 1).click();
 t('clic su casella libera: blocco aggiunto', blocksNow() === before + 1);
-// il blocco f (piccolo, colonna 6 riga 2) ha e in diagonale: non puo' diventare grande
+// il blocco f (piccolo, colonna 6 riga 2) ha e in diagonale: non può diventare grande
 d.querySelectorAll('#wd-board .cell')[6 * 8 + 5].querySelector('.blk').click();
 const grande = [...d.querySelectorAll('#wd-insp .seg')].find(b => b.textContent === 'Grande');
 t('crescere a grande con un vicino: bottone disattivato', grande?.disabled === true);
@@ -256,6 +256,73 @@ t('mondi: verdetto senza premere nulla', d.querySelector('#wd-v0 .chip')?.textCo
 [...d.querySelectorAll('#wd-board .blk')].forEach(b => { b.click(); const del = [...d.querySelectorAll('#wd-insp .btn')].find(x => x.textContent.includes('Elimina')); del?.click(); });
 await new Promise(r => setTimeout(r, 100));
 t('mondi: il verdetto segue le modifiche del tavolo', d.querySelector('#wd-v0 .chip')?.textContent === 'indefinito');
+
+// scorciatoie da tastiera
+const keyOn = (target, key, options = {}) =>
+  target.dispatchEvent(new W.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...options }));
+
+t('scorciatoie: il pannello parte chiuso', d.querySelector('#shortcuts').hidden === true);
+keyOn(d.body, '?');
+t('scorciatoie: "?" apre l\u2019elenco', d.querySelector('#shortcuts').hidden === false);
+t('scorciatoie: l\u2019elenco e\u2019 diviso per schermata', d.querySelectorAll('#shortcuts .sc-group').length === 4);
+keyOn(d.body, 'Escape');
+t('scorciatoie: Esc lo chiude', d.querySelector('#shortcuts').hidden === true);
+
+// non devono rubare tasti a chi sta scrivendo
+W.location.hash = '#wd';
+d.querySelectorAll('.screen').forEach(sec => sec.classList.toggle('on', sec.id === 's-wd'));
+d.querySelector('#wd-example').click();
+await new Promise(r => setTimeout(r, 200));
+const typingField = d.querySelector('#wd-rows .finput');
+typingField.focus();
+typingField.value = 'Cube(a)';
+typingField.dispatchEvent(new W.Event('input', { bubbles: true }));
+const blocksBefore = d.querySelectorAll('#wd-board .blk').length;
+keyOn(typingField, '?');
+keyOn(typingField, 'Backspace');
+keyOn(typingField, 'd');
+t('scorciatoie: dentro un campo non fanno nulla',
+  d.querySelector('#shortcuts').hidden === true && d.querySelectorAll('#wd-board .blk').length === blocksBefore);
+
+// con un blocco selezionato, fuori dai campi
+const firstBlock = d.querySelector('#wd-board .blk');
+firstBlock.click();
+const selected = () => d.querySelector('#wd-board .selcell');
+t('scorciatoie: blocco selezionato', !!selected());
+const positionOf = () => [...d.querySelectorAll('#wd-board .cell')].indexOf(selected());
+const start = positionOf();
+keyOn(d.body, 'ArrowRight');
+t('scorciatoie: la freccia sposta il blocco', positionOf() === start + 1);
+keyOn(d.body, 'ArrowLeft');
+t('scorciatoie: e torna indietro', positionOf() === start);
+keyOn(d.body, 'd');
+t('scorciatoie: "d" lo rende dodecaedro',
+  [...d.querySelectorAll('#wd-insp .seg')].some(b => b.textContent === 'Dodecaedro' && b.classList.contains('on')));
+keyOn(d.body, '1');
+t('scorciatoie: "1" lo rende piccolo',
+  [...d.querySelectorAll('#wd-insp .seg')].some(b => b.textContent === 'Piccolo' && b.classList.contains('on')));
+const beforeDelete = d.querySelectorAll('#wd-board .blk').length;
+keyOn(d.body, 'Backspace');
+t('scorciatoie: Backspace elimina il blocco', d.querySelectorAll('#wd-board .blk').length === beforeDelete - 1);
+keyOn(d.body, 'n');
+t('scorciatoie: "n" ne aggiunge uno', d.querySelectorAll('#wd-board .blk').length === beforeDelete);
+
+// navigazione fra strumenti
+keyOn(d.body, '3', { altKey: true });
+t('scorciatoie: Alt+3 apre Derivazioni', d.querySelector('#s-pf').classList.contains('on'));
+keyOn(d.body, '1', { altKey: true });
+t('scorciatoie: Alt+1 apre Tavole', d.querySelector('#s-tt').classList.contains('on'));
+
+// dentro le derivazioni
+keyOn(d.body, '3', { altKey: true });
+d.querySelector('#pf-reset').click();
+const pfFields = () => [...d.querySelectorAll('#pf-proof .pf')];
+pfFields()[1].focus();
+keyOn(pfFields()[1], 'Enter', { ctrlKey: true });
+t('scorciatoie: Ctrl+Invio apre una sottodimostrazione', !!d.querySelector('#pf-proof .sub'));
+const rowsBefore = d.querySelectorAll('#pf-proof .pline').length;
+keyOn(d.querySelector('#pf-proof .sub .pf'), 'Backspace');
+t('scorciatoie: Backspace su riga vuota la elimina', d.querySelectorAll('#pf-proof .pline').length === rowsBefore - 1);
 
 if (runtimeErrors.length) console.log(runtimeErrors.join('\n'));
 console.log(`\nsmoke test: ${pass} passati, ${fail} falliti`);

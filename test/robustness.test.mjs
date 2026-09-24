@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Verum-Proprietary
 /**
  * Test di robustezza: input assurdi, storti o enormi.
- * Regola generale: il nucleo puo' rifiutare, non puo' esplodere.
- * Un errore previsto (formula non valida, mondo non valido) e' un risultato;
- * un'eccezione non prevista e' un difetto.
+ * Regola generale: il nucleo può rifiutare, non può esplodere.
+ * Un errore previsto (formula non valida, mondo non valido) è un risultato;
+ * un'eccezione non prevista è un difetto.
  */
 import { tryParse, parse } from '../src/domain/language/Parser.js';
 import { print } from '../src/domain/language/Printer.js';
@@ -23,7 +23,7 @@ import { freshConstant } from '../src/domain/proof/constants.js';
 const never = (name, fn) => { try { fn(); return true; } catch (e) { console.log(`   ${name}: ${e.message}`); return false; } };
 const neverAsync = async (name, fn) => { try { await fn(); return true; } catch (e) { console.log(`   ${name}: ${e.message}`); return false; } };
 
-/* generatore deterministico, cosi' un fallimento e' sempre riproducibile */
+/* generatore deterministico, così un fallimento è sempre riproducibile */
 let seed = 20260921;
 const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
 const pick = list => list[Math.floor(rnd() * list.length)];
@@ -48,14 +48,14 @@ export default async function suite(t) {
   t('parser: cio\u2019 che accetta lo ristampa uguale', parserPrintable);
   t('parser: input enorme rifiutato senza bloccarsi', tryParse('('.repeat(50000)).ok === false);
   t('parser: i nomi non iniziano con _', tryParse('__proto__').ok === false);
-  // un atomo che si chiama come una proprieta' di Object non deve valere sempre vero
+  // un atomo che si chiama come una proprietà di Object non deve valere sempre vero
   const trap = tableFor([parse('constructor'), parse('toString ∧ valueOf')]);
   t('tavole: nomi come "constructor" non ereditano un valore',
     trap.columns[0].includes(true) && trap.columns[0].includes(false) && trap.columns[1].includes(false));
   t('tavole: nessuna colonna sempre vera per sbaglio',
     isTautologicalConsequence([], parse('toString')) === false);
 
-  /* formule casuali: nessun crash, e cio' che si accetta si ristampa uguale */
+  /* formule casuali: nessun crash, e ciò che si accetta si ristampa uguale */
   const atomPool = ['P', 'Q', 'Cube(a)', 'Larger(a, b)', 'a = b', '⊥'];
   const opPool = ['∧', '∨', '→', '↔'];
   const randomFormula = depth => {

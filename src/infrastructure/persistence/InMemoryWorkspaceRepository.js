@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Verum-Proprietary
 /**
  * Infrastruttura · Persistenza · adattatore in memoria.
- * Usato dai test e come fallback quando localStorage non e' disponibile.
+ * Usato dai test e come fallback quando localStorage non è disponibile.
  */
 import { WorkspaceRepository } from '../../application/ports.js';
 

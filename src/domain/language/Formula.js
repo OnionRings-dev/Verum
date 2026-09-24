@@ -5,7 +5,7 @@
  *
  * Value object immutabile che rappresenta una formula del primo ordine.
  * Nessuna dipendenza da DOM, rete, storage, orologio o caso: questo file
- * e' eseguibile in Node, nel browser e in un test senza alcun adattatore.
+ * è eseguibile in Node, nel browser e in un test senza alcun adattatore.
  */
 
 export const Sym = Object.freeze({

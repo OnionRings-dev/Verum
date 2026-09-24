@@ -3,7 +3,7 @@
 /**
  * Infrastruttura · Web · disegno dei solidi in rilievo.
  *
- * Ogni solido e' disegnato in vista di tre quarti con tre livelli di luce
+ * Ogni solido è disegnato in vista di tre quarti con tre livelli di luce
  * (faccia illuminata, faccia frontale, faccia in ombra), contorno scuro,
  * riflesso e ombra portata. I colori non sono scritti qui: i gradienti
  * leggono i token --pc-* del tema attivo, quindi cambiare tema cambia il

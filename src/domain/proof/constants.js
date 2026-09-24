@@ -5,7 +5,7 @@
  *
  * Le regole ∀ Intro ed ∃ Elim chiedono una costante "nuova": che non compaia
  * fuori dalla sottodimostrazione in cui viene introdotta. Qui si calcola
- * quali nomi sono gia' in uso e se ne propone uno libero.
+ * quali nomi sono già in uso e se ne propone uno libero.
  */
 import { tryParse } from '../language/Parser.js';
 import { freeTerms } from '../language/Formula.js';
@@ -15,7 +15,7 @@ import { CONSTANTS } from '../world/Block.js';
 export const isVariableName = name => /^[u-z][0-9]*$/.test(name);
 export const isConstantName = name => /^[a-z][a-z0-9]*$/.test(name) && !isVariableName(name);
 
-/** Nomi usati nella prova: termini liberi di ogni riga, obiettivo e costanti gia' dichiarate. */
+/** Nomi usati nella prova: termini liberi di ogni riga, obiettivo e costanti già dichiarate. */
 export function namesInUse(proof) {
   const used = new Set();
   const visit = container => container.items.forEach(item => {

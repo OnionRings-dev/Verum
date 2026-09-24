@@ -54,7 +54,7 @@ export function constantPicker({ value, used, fresh, onChange, onCommit }) {
     onChange(name);
     menu.hidden = true;
     input.focus();
-    input.select();   // si puo' rinominare subito scrivendo
+    input.select();   // si può rinominare subito scrivendo
   }, ' wide new'));
 
   const open = () => { menu.hidden = false; };

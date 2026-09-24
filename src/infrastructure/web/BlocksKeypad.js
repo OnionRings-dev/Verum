@@ -4,7 +4,7 @@
  * Infrastruttura · Web · tastierino del linguaggio dei blocchi (schermata Mondi).
  *
  * Simboli, nomi, variabili e predicati a portata di clic. I predicati e le
- * loro arieta' vengono dalla segnatura del dominio: se il linguaggio cambia,
+ * loro arietà vengono dalla segnatura del dominio: se il linguaggio cambia,
  * il tastierino cambia da solo.
  */
 import { el, clear, insertAround } from './dom.js';

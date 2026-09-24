@@ -3,12 +3,12 @@
 /**
  * Dominio · Prova · Regole di inferenza
  *
- * Ogni regola e' un oggetto con un proprio `check`. Aggiungere una regola
+ * Ogni regola è un oggetto con un proprio `check`. Aggiungere una regola
  * (Ana Con, FO Con, un sistema di Hilbert, la logica modale) significa
- * aggiungere un file, non modificare un `switch`: il registro e' aperto
+ * aggiungere un file, non modificare un `switch`: il registro è aperto
  * all'estensione e chiuso alla modifica.
  *
- * Il contesto passato a `check` e' già risolto dal ProofChecker:
+ * Il contesto passato a `check` è già risolto dal ProofChecker:
  *   { conclusion, lines: [{formula, number}], subproofs: [{assumption, conclusion, constant}] }
  */
 import { equals, substitute, freeTerms, conjuncts, disjuncts, equalsUpToSubstitution } from '../language/Formula.js';

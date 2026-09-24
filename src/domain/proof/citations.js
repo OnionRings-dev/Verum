@@ -3,9 +3,9 @@
 /**
  * Dominio · Prova · riferimenti di una riga
  *
- * Un riferimento e' un numero di riga ("4") o un intervallo che indica una
+ * Un riferimento è un numero di riga ("4") o un intervallo che indica una
  * sottodimostrazione ("2-7"). Qui vivono la lettura e la modifica dell'elenco,
- * cosi' che scriverlo a mano e comporlo a colpi di clic diano lo stesso
+ * così che scriverlo a mano e comporlo a colpi di clic diano lo stesso
  * risultato.
  */
 export const citationTokens = citations =>
@@ -13,7 +13,7 @@ export const citationTokens = citations =>
 
 export const formatCitations = tokens => tokens.join(', ');
 
-/** Se il riferimento c'e' lo toglie, altrimenti lo aggiunge in ordine. */
+/** Se il riferimento c'è lo toglie, altrimenti lo aggiunge in ordine. */
 export function toggleCitation(citations, token) {
   const tokens = citationTokens(citations);
   const at = tokens.indexOf(token);

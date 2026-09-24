@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Liam Michael Boland
 // SPDX-License-Identifier: LicenseRef-Verum-Proprietary
 /**
- * Dominio · Verita' · TruthTable
- * Semantica veritativo-funzionale. Tutto cio' che non e' un connettivo
+ * Dominio · Verità · TruthTable
+ * Semantica veritativo-funzionale. Tutto ciò che non è un connettivo
  * proposizionale viene trattato come atomo, incluse le formule quantificate.
  */
 import { print } from '../language/Printer.js';
@@ -21,7 +21,7 @@ export function atomsOf(f, acc = new Map()) {
 }
 
 /** Oggetto senza prototipo: un atomo che si chiama "constructor" o "toString"
- *  non deve ereditare un valore di verita' da Object.prototype. */
+ *  non deve ereditare un valore di verità da Object.prototype. */
 export const emptyAssignment = () => Object.create(null);
 
 export function valueUnder(f, assignment) {

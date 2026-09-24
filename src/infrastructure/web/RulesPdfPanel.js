@@ -5,7 +5,7 @@
  *
  * L'utente sceglie dal proprio computer il PDF delle regole del corso; il
  * pannello lo mostra accanto alla prova e lo ricorda per le volte successive.
- * Il PDF non e' incluso nel progetto: e' materiale di terzi e resta
+ * Il PDF non è incluso nel progetto: è materiale di terzi e resta
  * nella copia personale di chi lo usa.
  */
 import { el, clear } from './dom.js';

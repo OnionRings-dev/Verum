@@ -6,7 +6,7 @@ file contenuto in questo repository sono opera originale di Liam Michael Boland
 e sono protetti dalla legge sul diritto d'autore (L. 22 aprile 1941, n. 633) e
 dalle convenzioni internazionali applicabili.
 
-Salvo quanto previsto espressamente qui sotto, non e' concesso alcun diritto di
+Salvo quanto previsto espressamente qui sotto, non è concesso alcun diritto di
 copiare, modificare, distribuire, pubblicare, concedere in sublicenza o usare
 il software, in tutto o in parte, senza il consenso scritto dell'autore.
 
@@ -20,7 +20,7 @@ Uso consentito senza ulteriore autorizzazione:
 Qualsiasi altro uso, incluso l'impiego nella didattica di un corso, richiede
 una licenza scritta dell'autore.
 
-IL SOFTWARE E' FORNITO "COSI' COM'E'", SENZA GARANZIE DI ALCUN TIPO. L'AUTORE
-NON E' RESPONSABILE PER DANNI DERIVANTI DAL SUO USO.
+IL SOFTWARE È FORNITO "COSI' COM'E'", SENZA GARANZIE DI ALCUN TIPO. L'AUTORE
+NON È RESPONSABILE PER DANNI DERIVANTI DAL SUO USO.
 
 Contatti: Liam Michael Boland <liammichael.boland@studenti.unimi.it>

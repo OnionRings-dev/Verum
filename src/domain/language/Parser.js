@@ -3,7 +3,7 @@
 /**
  * Dominio · Linguaggio · Parser
  *
- * Discesa ricorsiva. Precedenza (dal piu' stretto): ¬ ∀ ∃ > ∧ > ∨ > → > ↔.
+ * Discesa ricorsiva. Precedenza (dal più stretto): ¬ ∀ ∃ > ∧ > ∨ > → > ↔.
  * → associa a destra, gli altri binari a sinistra.
  * Funzione pura: nessun I/O, nessuno stato globale.
  */

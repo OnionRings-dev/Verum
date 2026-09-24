@@ -22,6 +22,7 @@ import { ProofView } from './infrastructure/web/ProofView.js';
 import { RulesPdfPanel } from './infrastructure/web/RulesPdfPanel.js';
 import { SentenceLibraryMenu } from './infrastructure/web/SentenceLibraryMenu.js';
 import { BlocksKeypad } from './infrastructure/web/BlocksKeypad.js';
+import { KeyboardShortcuts } from './infrastructure/web/KeyboardShortcuts.js';
 import { SenFileImporter } from './infrastructure/import/SenFileImporter.js';
 import { BrowserFileStore } from './infrastructure/persistence/BrowserFileStore.js';
 
@@ -44,7 +45,8 @@ async function startSafely(what, start) {
 async function bootstrap() {
   console.info('Verum \u00a9 2026 Liam Michael Boland. Tutti i diritti riservati.');
   await repository.resetIfOutdated(SCHEMA_VERSION, ['truth-table', 'world', 'proof']);
-  new Router().start();
+  const router = new Router();
+  router.start();
   new SymbolPalette().start();
   await startSafely('temi', () => new ThemeSwitcher({ repository }).start());
 
@@ -64,6 +66,7 @@ async function bootstrap() {
     onPick: collection => worldView.loadCollection(collection)
   }).start());
   await startSafely('Derivazioni', () => new ProofView({ checkProof, repository }).start());
+  await startSafely('scorciatoie', () => new KeyboardShortcuts({ router, worldView }).start());
   await startSafely('pannello delle regole', () => new RulesPdfPanel({ host: document.getElementById('pf-rules'), fileStore }).start());
 }
 

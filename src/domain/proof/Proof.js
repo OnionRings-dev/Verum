@@ -3,9 +3,9 @@
 /**
  * Dominio · Prova · Proof
  *
- * Aggregato: una derivazione in stile Fitch e' un albero di righe e
+ * Aggregato: una derivazione in stile Fitch è un albero di righe e
  * sottodimostrazioni. La numerazione e le regole di accessibilita' (quali
- * righe una riga puo' citare) sono invarianti dell'aggregato, non della UI.
+ * righe una riga può citare) sono invarianti dell'aggregato, non della UI.
  */
 let nextId = 1;
 const newId = () => nextId++;
@@ -33,7 +33,7 @@ export class Proof {
 
   /**
    * Numera le righe e registra, per ciascuna, la catena dei contenitori che la
-   * racchiudono. La catena e' ciò che rende decidibile l'accessibilita'.
+   * racchiudono. La catena è ciò che rende decidibile l'accessibilita'.
    */
   index() {
     const lines = [], subproofs = [];
@@ -49,7 +49,7 @@ export class Proof {
     return { lines, subproofs, lineCount: n };
   }
 
-  /** Una riga vede solo cio' che sta in un contenitore ancora aperto sopra di se'. */
+  /** Una riga vede solo ciò che sta in un contenitore ancora aperto sopra di se'. */
   static isAccessible(targetChain, fromChain) {
     return targetChain.length <= fromChain.length && targetChain.every((c, i) => c === fromChain[i]);
   }

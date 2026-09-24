@@ -1,16 +1,16 @@
 // SPDX-FileCopyrightText: 2026 Liam Michael Boland
 // SPDX-License-Identifier: LicenseRef-Verum-Proprietary
 /**
- * Test di conformita' architetturale.
+ * Test di conformità architetturale.
  *
- * L'architettura a strati e' una regola, e una regola che nessuno verifica
+ * L'architettura a strati è una regola, e una regola che nessuno verifica
  * viene violata al primo commit frettoloso. Questo test fallisce la build
  * se qualcuno importa infrastruttura dentro il dominio.
  *
- *   dominio        -> puo' importare solo dominio
- *   applicazione   -> puo' importare dominio e applicazione
- *   infrastruttura -> puo' importare tutto
- *   main.js        -> composition root, puo' importare tutto
+ *   dominio        -> può importare solo dominio
+ *   applicazione   -> può importare dominio e applicazione
+ *   infrastruttura -> può importare tutto
+ *   main.js        -> composition root, può importare tutto
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';

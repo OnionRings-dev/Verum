@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Liam Michael Boland
 // SPDX-License-Identifier: LicenseRef-Verum-Proprietary
 /**
- * Applicazione · Caso d'uso · Costruisci una tavola di verita'
+ * Applicazione · Caso d'uso · Costruisci una tavola di verità
  *
  * Riceve testo grezzo, restituisce un DTO piatto e serializzabile.
  * Non conosce il DOM: lo stesso caso d'uso serve una CLI, un test o un'API.

@@ -58,7 +58,7 @@ export class ProofChecker {
 
   /**
    * Una premessa sta solo al livello principale, prima di ogni riga derivata:
-   * e' il punto di partenza dichiarato, non una mossa della prova.
+   * è il punto di partenza dichiarato, non una mossa della prova.
    */
   checkPremise(entry, proof) {
     const container = entry.chain[entry.chain.length - 1];
@@ -73,8 +73,8 @@ export class ProofChecker {
   }
 
   /**
-   * Un'assunzione e' lecita solo come prima riga di una sottodimostrazione:
-   * e' proprio l'apertura della sottodimostrazione a renderla temporanea.
+   * Un'assunzione è lecita solo come prima riga di una sottodimostrazione:
+   * è proprio l'apertura della sottodimostrazione a renderla temporanea.
    */
   checkAssumption(entry) {
     const container = entry.chain[entry.chain.length - 1];

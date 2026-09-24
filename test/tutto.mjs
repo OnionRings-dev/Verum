@@ -3,7 +3,7 @@
 /**
  * Esegue tutte le suite, compresa la costruzione del bundle.
  *   node test/tutto.mjs
- * Lo stress test gira su piu' semi: ogni seme e' una sequenza di azioni diversa.
+ * Lo stress test gira su più semi: ogni seme è una sequenza di azioni diversa.
  */
 import { execFileSync } from 'node:child_process';
 

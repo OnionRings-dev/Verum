@@ -4,9 +4,9 @@
  * Infrastruttura · Persistenza · archivio di file nel browser.
  *
  * Conserva un file scelto dall'utente (es. il PDF delle regole) in IndexedDB,
- * cosi' resta disponibile tra una sessione e l'altra. Il file non lascia mai
+ * così resta disponibile tra una sessione e l'altra. Il file non lascia mai
  * il computer dell'utente e non fa parte del repository.
- * Se IndexedDB non c'e' (navigazione privata, ambienti di test) ripiega sulla
+ * Se IndexedDB non c'è (navigazione privata, ambienti di test) ripiega sulla
  * memoria: il file vale per la sessione corrente.
  */
 const DB_NAME = 'verum-files';

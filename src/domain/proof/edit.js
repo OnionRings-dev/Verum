@@ -26,9 +26,9 @@ export function locate(container, lineId, chain = []) {
 
 /**
  * Rientra una riga di un livello.
- * Se sopra c'e' gia' una sottodimostrazione, la riga ci entra in coda.
+ * Se sopra c'è già una sottodimostrazione, la riga ci entra in coda.
  * Altrimenti nasce una nuova sottodimostrazione e la riga ne diventa
- * l'assunzione, che e' l'unico ruolo lecito per la prima riga di un blocco.
+ * l'assunzione, che è l'unico ruolo lecito per la prima riga di un blocco.
  * Una premessa non rientra: perderebbe il suo significato.
  */
 export function indentLine(proof, lineId) {
@@ -56,7 +56,7 @@ export function indentLine(proof, lineId) {
 
 /**
  * Sporge una riga di un livello: esce dalla sottodimostrazione e si piazza
- * subito dopo di essa. Si puo' fare solo con l'ultima riga del blocco, perche'
+ * subito dopo di essa. Si può fare solo con l'ultima riga del blocco, perché
  * togliere una riga dal mezzo spezzerebbe le righe che la citano. Se il blocco
  * resta vuoto sparisce.
  */

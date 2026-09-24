@@ -31,6 +31,14 @@ export class TruthTableView {
     this.build();
   }
 
+  removeAt(i) {
+    this.sentences.splice(i, 1);
+    if (!this.sentences.length) this.sentences = [''];
+    this.renderInputs(); this.persist(); this.build();
+    const fields = $$('#tt-rows .finput');
+    (fields[Math.max(0, i - 1)] ?? fields[0])?.focus();
+  }
+
   addRow() {
     this.sentences.push('');
     this.renderInputs();
@@ -57,6 +65,10 @@ export class TruthTableView {
       input.addEventListener('change', () => this.persist());
       input.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); this.refresh.now(); this.addRow(); }
+        if (e.key === 'Backspace' && !input.value && this.sentences.length > 1) {
+          e.preventDefault();
+          this.removeAt(i);
+        }
       });
 
       const remove = el('button', 'xbtn', '×');

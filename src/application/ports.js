@@ -6,7 +6,7 @@
  * Interfacce possedute dall'applicazione, non dall'infrastruttura. Il dominio
  * e i casi d'uso dipendono da queste firme; chi le implementa (localStorage,
  * un backend HTTP, un file .wld) sta fuori e viene iniettato dal composition
- * root. Cambiare adattatore non tocca nulla di cio' che sta dentro.
+ * root. Cambiare adattatore non tocca nulla di ciò che sta dentro.
  *
  * In JavaScript non esistono interfacce: queste classi documentano il
  * contratto e falliscono rumorosamente se un metodo non viene implementato.

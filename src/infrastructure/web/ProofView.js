@@ -26,7 +26,7 @@ export class ProofView {
     this.notice = '';
     this.openRule = null;
     this.rows = new Map();
-    this.dirty = false;   // c'e' qualcosa da salvare e da riverificare?
+    this.dirty = false;   // c'è qualcosa da salvare e da riverificare?
     this.active = null;   // riga su cui si sta lavorando: si evidenziano i suoi riferimenti
     this.citing = null;   // riga il cui campo rif. ha il fuoco: i bersagli diventano cliccabili
   }
@@ -61,7 +61,7 @@ export class ProofView {
     if (!saved) return this.blankProof();
     try {
       const proof = this.deserialize(saved);
-      this.checkProof.execute({ proof });   // se non e' verificabile non e' una prova
+      this.checkProof.execute({ proof });   // se non è verificabile non è una prova
       return proof;
     } catch (error) {
       console.warn('prova salvata illeggibile, si riparte da una prova vuota', error);
@@ -95,8 +95,8 @@ export class ProofView {
     };
   }
   /**
-   * Ricostruisce la prova da dati salvati. Tutto e' trattato come sospetto:
-   * il contenuto di localStorage puo' essere di una versione precedente,
+   * Ricostruisce la prova da dati salvati. Tutto è trattato come sospetto:
+   * il contenuto di localStorage può essere di una versione precedente,
    * troncato o modificato a mano, e non deve mai impedire l'avvio.
    */
   deserialize(data) {
@@ -118,7 +118,7 @@ export class ProofView {
   /* ---- rendering ---- */
   /**
    * Aggiorna solo gli esiti: pallini, messaggi, verdetto. Non tocca i campi,
-   * quindi non sposta il cursore ne' chiude i menu aperti. Il disegno completo
+   * quindi non sposta il cursore né chiude i menu aperti. Il disegno completo
    * (`render`) serve solo quando cambia la struttura della prova.
    */
   paint(outcome = this.checkProof.execute({ proof: this.proof })) {
@@ -172,7 +172,7 @@ export class ProofView {
       const body = el('div', 'pbody');
 
       if (isAssumption && subproof) {
-        // la costante di questa sottodimostrazione non conta come "gia' usata" per se stessa
+        // la costante di questa sottodimostrazione non conta come "già usata" per se stessa
         const without = compute => {
           const own = subproof.constant; subproof.constant = '';
           try { return compute(); } finally { subproof.constant = own; }
@@ -192,8 +192,26 @@ export class ProofView {
       text.addEventListener('input', () => { line.text = text.value; this.dirty = true; });
       text.addEventListener('blur', e => this.commit(e));
       text.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault(); line.text = text.value;
+          const at = container.items.indexOf(line) + 1;
+          const sub = new Subproof();
+          container.items.splice(at, 0, sub);
+          this.focusKey = 'f' + sub.items[0].id;
+          this.render(); this.persist();
+          return;
+        }
         if (e.key === 'Enter') { e.preventDefault(); line.text = text.value; this.insertAfter(container, line); }
         if (e.key === 'Tab') { e.preventDefault(); line.text = text.value; this.restructure(line.id, e.shiftKey ? 'outdent' : 'indent'); }
+        if (e.key === 'Backspace' && !text.value) {
+          const previous = this.lineBefore(line.id);
+          if (!previous) return;                       // la prima riga non si cancella da sola
+          e.preventDefault();
+          container.items.splice(container.items.indexOf(line), 1);
+          if (container.kind === 'subproof' && !container.items.length) this.dropSubproof(container);
+          this.focusKey = 'f' + previous.id;
+          this.render(); this.persist();
+        }
       });
       body.appendChild(text);
 
@@ -326,7 +344,7 @@ export class ProofView {
    */
   /**
    * Fine della scrittura in un campo: si riverifica e si salva, ma la struttura
-   * resta quella che e'. Cosi' il campo su cui l'utente sta passando non viene
+   * resta quella che e'. Così il campo su cui l'utente sta passando non viene
    * sostituito sotto il suo clic e il cursore non salta.
    */
   commit() {
@@ -339,13 +357,13 @@ export class ProofView {
 
   /** Segna la riga su cui si sta lavorando; con `citing` i bersagli diventano cliccabili. */
   focusRow(lineId, citing, field = null) {
-    if (field && !field.isConnected) return;   // campo gia' sostituito da un nuovo disegno
+    if (field && !field.isConnected) return;   // campo già sostituito da un nuovo disegno
     this.active = lineId;
     this.citing = citing ? lineId : null;
     this.applyHighlights();
   }
 
-  /** Righe e sottodimostrazioni che la riga attiva puo' legittimamente citare. */
+  /** Righe e sottodimostrazioni che la riga attiva può legittimamente citare. */
   citableFor(entry) {
     const numbers = this.index.lines
       .filter(l => l.number < entry.number && Proof.isAccessible(l.chain, entry.chain))
@@ -368,7 +386,7 @@ export class ProofView {
     const entry = this.index.lines.find(l => l.line.id === this.active);
     if (!entry) return;
 
-    // i riferimenti della riga attiva, evidenziati solo finche' si lavora su quella riga
+    // i riferimenti della riga attiva, evidenziati solo finché si lavora su quella riga
     for (const token of citationTokens(entry.line.citations)) {
       this.rowsByNumber.get(Number(token))?.classList.add('cited');
       this.boxesByRange.get(token)?.classList.add('cited');
@@ -401,6 +419,21 @@ export class ProofView {
     this.focusKey = 'f' + lineId;
     this.render();
     this.persist();
+  }
+
+  /** La riga che precede, in ordine di numerazione. */
+  lineBefore(lineId) {
+    const lines = this.proof.index().lines;
+    const at = lines.findIndex(l => l.line.id === lineId);
+    return at > 0 ? lines[at - 1].line : null;
+  }
+
+  dropSubproof(subproof) {
+    const strip = container => {
+      container.items = container.items.filter(item => item !== subproof);
+      container.items.forEach(item => { if (item.kind === 'subproof') strip(item); });
+    };
+    strip(this.proof);
   }
 
   insertAfter(container, line) {

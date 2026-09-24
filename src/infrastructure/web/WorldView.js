@@ -55,7 +55,7 @@ export class WorldView {
   }
 
   /**
-   * Ripristina il mondo salvato scartando cio' che non e' costruibile:
+   * Ripristina il mondo salvato scartando ciò che non è costruibile:
    * i dati possono venire da una versione precedente o essere stati modificati.
    */
   restore(saved) {
@@ -96,12 +96,12 @@ export class WorldView {
   /** Traduce lo stato di editing nell'aggregato di dominio. */
   toWorld() { return new World(this.blocks.map(b => new Block(b))); }
 
-  /** Il dominio decide dove un blocco puo' stare; la vista chiede e basta. */
+  /** Il dominio decide dove un blocco può stare; la vista chiede e basta. */
   conflictFor(candidate, ignoreId = null) {
     return World.placementConflict(this.blocks, candidate, ignoreId);
   }
 
-  /** Blocchi che violano gia' le regole (es. un mondo salvato con una versione precedente). */
+  /** Blocchi che violano già le regole (es. un mondo salvato con una versione precedente). */
   violatingIds() {
     const ids = new Set();
     for (let i = 0; i < this.blocks.length; i++)
@@ -112,13 +112,82 @@ export class WorldView {
 
   refuse(message) { this.notice = message; this.renderInspector(); }
 
+  /* ---------- comandi da tastiera ---------- */
+
+  selectedBlock() { return this.blocks.find(b => b.id === this.selected) ?? null; }
+
+  /** Sposta il blocco selezionato di una casella, se la regola del tavolo lo consente. */
+  moveSelected(dx, dy) {
+    const block = this.selectedBlock();
+    if (!block) return false;
+    const x = block.x + dx, y = block.y + dy;
+    if (x < 0 || x > 7 || y < 0 || y > 7) return false;
+    const conflict = this.conflictFor({ x, y, size: block.size }, block.id);
+    if (conflict) { this.refuse(conflict.reason); this.renderBoard(); return false; }
+    block.x = x; block.y = y; this.notice = '';
+    this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
+    return true;
+  }
+
+  changeSelected(change) {
+    const block = this.selectedBlock();
+    if (!block) return false;
+    const candidate = { x: block.x, y: block.y, size: change.size ?? block.size };
+    const conflict = this.conflictFor(candidate, block.id);
+    if (conflict) { this.refuse(conflict.reason); this.renderInspector(); return false; }
+    Object.assign(block, change); this.notice = '';
+    this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
+    return true;
+  }
+
+  nameSelected(name) {
+    const block = this.selectedBlock();
+    if (!block) return false;
+    if (block.names.includes(name)) block.names = block.names.filter(n => n !== name);
+    else {
+      this.blocks.forEach(other => { other.names = other.names.filter(n => n !== name); });
+      block.names = [...block.names, name].sort();
+    }
+    this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
+    return true;
+  }
+
+  deleteSelected() {
+    const block = this.selectedBlock();
+    if (!block) return false;
+    this.blocks = this.blocks.filter(b => b.id !== block.id);
+    this.selected = null; this.notice = '';
+    this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
+    return true;
+  }
+
+  deselect() {
+    if (this.selected === null) return false;
+    this.selected = null; this.notice = '';
+    this.renderBoard(); this.renderInspector();
+    return true;
+  }
+
+  /** Aggiunge un blocco nella prima casella libera, per chi lavora da tastiera. */
+  addBlockSomewhere() {
+    for (let y = 7; y >= 0; y--) for (let x = 0; x < 8; x++) {
+      if (this.conflictFor({ x, y, size: Size.MEDIUM })) continue;
+      const created = { id: this.nextId++, shape: Shape.CUBE, size: Size.MEDIUM, x, y, names: [] };
+      this.blocks.push(created); this.selected = created.id; this.notice = '';
+      this.renderBoard(); this.renderInspector(); this.persist(); this.evaluate();
+      return true;
+    }
+    this.refuse('Non c\u2019è una casella libera per un blocco nuovo.');
+    return false;
+  }
+
   renderBoard() {
     ensureShapeDefs();
     const board = clear($('#wd-board'));
     const violating = this.violatingIds();
 
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-      // vera scacchiera: la casella in basso a sinistra e' scura
+      // vera scacchiera: la casella in basso a sinistra è scura
       const cell = el('div', 'cell' + ((x + y) % 2 === 1 ? ' dark' : ''));
       // coordinate solo numeriche: le lettere si confonderebbero con le costanti a-f
       if (x === 0) cell.appendChild(el('span', 'coord row', String(8 - y)));
@@ -143,7 +212,7 @@ export class WorldView {
         cell.appendChild(node);
         if (block.names.length) cell.appendChild(el('span', 'lbl', block.names.join(' ')));
       } else {
-        // un blocco nuovo nasce medio: se anche un medio e' escluso, la casella e' nell'area di un grande
+        // un blocco nuovo nasce medio: se anche un medio è escluso, la casella è nell'area di un grande
         const blocked = this.conflictFor({ x, y, size: Size.MEDIUM });
         if (blocked) {
           cell.classList.add('blocked');
@@ -252,6 +321,15 @@ export class WorldView {
    * Sostituisce l'elenco degli enunciati (es. da una raccolta caricata).
    * @param {{text:string, note:string}[]} items
    */
+  removeAt(i) {
+    this.sentences.splice(i, 1);
+    this.notes.splice(i, 1);
+    if (!this.sentences.length) { this.sentences = ['']; this.notes = ['']; }
+    this.renderSentences(); this.persist(); this.evaluate();
+    const fields = $$('#wd-rows .finput');
+    (fields[Math.max(0, i - 1)] ?? fields[0])?.focus();
+  }
+
   addSentence() {
     this.sentences.push(''); this.notes.push('');
     this.renderSentences(); this.focusLastSentence();
@@ -291,6 +369,10 @@ export class WorldView {
       input.addEventListener('change', () => this.persist());
       input.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); this.refresh.now(); this.addSentence(); }
+        if (e.key === 'Backspace' && !input.value && this.sentences.length > 1) {
+          e.preventDefault();
+          this.removeAt(i);
+        }
       });
 
       const verdict = el('span'); verdict.id = `wd-v${i}`; verdict.className = 'wd-verdict';

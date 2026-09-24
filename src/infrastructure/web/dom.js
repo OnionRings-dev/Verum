@@ -27,7 +27,7 @@ export function insertAround(field, before, after = '') {
   field.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-/** Ritarda l'esecuzione finche' l'utente smette di digitare. */
+/** Ritarda l'esecuzione finché l'utente smette di digitare. */
 export function debounce(action, delay = 300) {
   let timer = null;
   const run = (...args) => { clearTimeout(timer); timer = setTimeout(() => action(...args), delay); };

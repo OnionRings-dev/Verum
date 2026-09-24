@@ -8,7 +8,7 @@
  * rispondere a una domanda sola: durante la dimostrazione, qualunque cosa
  * combini chi guarda, l'applicazione regge?
  *
- * La sequenza e' deterministica: se fallisce, rieseguendolo fallisce uguale.
+ * La sequenza è deterministica: se fallisce, rieseguendolo fallisce uguale.
  * Esecuzione:  node build.mjs && node test/stress.test.mjs
  */
 import { JSDOM } from 'jsdom';
@@ -66,6 +66,7 @@ const safely = (what, action) => {
 
 /* ---------- 1. avvio pulito ---------- */
 t('avvio senza errori', errors.length === 0);
+t('pannello scorciatoie presente e chiuso', d.querySelector('#shortcuts')?.hidden === true);
 
 /* ---------- 2. pestaggio a caso ---------- */
 let clicks = 0, edits = 0;
@@ -97,6 +98,16 @@ for (let round = 0; round < ROUNDS; round++) {
       });
       edits++;
     }
+  } else if (rnd() < 0.25) {
+    // tasti a caso, dentro e fuori dai campi
+    const key = pick(['?', 'Escape', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+                      '1', '2', '3', 't', 'c', 'd', 'a', 'f', 'n', 'Enter', 'Tab', 'z']);
+    const where = pick([d.body, ...fieldsIn(screen)]).dispatchEvent
+      ? pick([d.body, ...fieldsIn(screen)]) : d.body;
+    safely('tasto', () => where.dispatchEvent(new W.KeyboardEvent('keydown', {
+      key, bubbles: true, cancelable: true,
+      ctrlKey: rnd() < 0.2, shiftKey: rnd() < 0.2, altKey: rnd() < 0.2
+    })));
   } else if (rnd() < 0.5) {
     const labels = [...d.querySelectorAll('#pf-proof .prule')];
     if (labels.length) safely('regola', () => {
@@ -113,7 +124,7 @@ for (let round = 0; round < ROUNDS; round++) {
 t(`${clicks} clic e ${edits} modifiche a caso senza errori`, errors.length === 0);
 if (errors.length) console.log('   primo errore:', errors[0]);
 
-/* ---------- 3. l'applicazione e' ancora viva ---------- */
+/* ---------- 3. l'applicazione è ancora viva ---------- */
 W.location.hash = '#tt';
 d.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === 's-tt'));
 safely('svuota tavole', () => d.querySelector('#tt-clear').click());
@@ -133,6 +144,7 @@ W.location.hash = '#pf';
 d.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === 's-pf'));
 safely('nuova prova', () => d.querySelector('#pf-reset').click());
 safely('esempio prova', () => d.querySelector('#pf-example').click());
+safely('chiusura pannello', () => { d.querySelector('#shortcuts').hidden = true; });
 t('Derivazioni verifica ancora la prova di esempio',
   d.querySelector('#pf-verdict')?.textContent.includes('completa'));
 
