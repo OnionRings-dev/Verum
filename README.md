@@ -66,3 +66,19 @@ una demo offline.
 
 Le regole che tengono in piedi questa struttura sono descritte in ARCHITETTURA.md
 e verificate da `test/architecture.test.mjs`.
+
+## Autore
+
+Liam Michael Boland — <liammichael.boland@studenti.unimi.it>
+Universita' degli Studi di Milano, progetto di tesi.
+
+## Licenza
+
+Tutti i diritti riservati. Vedi `LICENSE`: la consultazione e l'esecuzione a
+scopo di valutazione accademica sono consentite, ogni altro uso richiede una
+licenza scritta. `PROPRIETA.md` descrive come e' documentata la paternita' del
+progetto.
+
+I materiali del corso (i programmi originali, il PDF delle regole, i file di
+enunciati `.sen`) non fanno parte di questo repository: sono opera di terzi e
+vanno caricati nell'applicazione dalla propria copia personale.

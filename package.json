@@ -4,6 +4,8 @@
   "description": "Strumenti web per la logica del primo ordine: tavole di verita', mondi di blocchi, derivazioni in stile Fitch.",
   "type": "module",
   "private": true,
+  "author": "Liam Michael Boland <liammichael.boland@studenti.unimi.it>",
+  "license": "LicenseRef-Verum-Proprietary",
   "scripts": {
     "start": "python3 -m http.server 8000",
     "test": "node test/run.mjs",

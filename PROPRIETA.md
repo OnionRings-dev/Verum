@@ -80,7 +80,7 @@ Windows, da PowerShell:
 
 ```powershell
 # 1. crea una chiave (se non ne hai gia' una), usa l'email del tuo account GitHub
-ssh-keygen -t ed25519 -C "tua-email@esempio.it"
+ssh-keygen -t ed25519 -C "liammichael.boland@studenti.unimi.it"
 
 # 2. di' a Git di firmare con quella chiave
 git config --global gpg.format ssh
@@ -188,11 +188,12 @@ per il software sviluppato con risorse del dipartimento.
 
 ## Riepilogo da fare adesso
 
-- [ ] Nome anagrafico in footer, `LICENSE`, `AUTHORS` e `git config user.name` (passo 0)
+- [x] Nome anagrafico in footer, `LICENSE`, `AUTHORS` (passo 0)
+- [ ] `git config user.name` e `git config user.email` impostati con gli stessi dati
 - [ ] Nessun file LPL nella storia del repository (controllo sopra)
 - [ ] Uso dell'IA dichiarato al relatore
 - [ ] Firma dei commit attiva (passo 2) e badge Verified visibile
 - [ ] Tag firmato `v0.2.0` pubblicato (passo 3)
 - [ ] `.tar` + `.ots` salvati in due posti (passo 4)
-- [ ] Email di contatto inserita in `LICENSE`
+- [x] Email di contatto inserita in `LICENSE` e in `AUTHORS`
 - [ ] Decisione pubblico/privato presa (passo 7)

@@ -23,4 +23,4 @@ una licenza scritta dell'autore.
 IL SOFTWARE E' FORNITO "COSI' COM'E'", SENZA GARANZIE DI ALCUN TIPO. L'AUTORE
 NON E' RESPONSABILE PER DANNI DERIVANTI DAL SUO USO.
 
-Contatti: <inserisci qui il tuo indirizzo email>
+Contatti: Liam Michael Boland <liammichael.boland@studenti.unimi.it>
